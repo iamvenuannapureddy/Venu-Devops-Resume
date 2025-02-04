@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vProfile AWS Refactoring Project</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; padding: 20px; }
+        h1, h2, h3 { color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <h1>vProfile AWS Refactoring Project</h1>
+    
+    <h2>Project Overview</h2>
+    <p>This project focuses on refactoring and re-architecting the vProfile application stack using AWS services. In the previous project, we deployed the application on both local machines and AWS Cloud using a lift-and-shift strategy. In this project, we adopt a re-architecture or refactoring strategy to enhance agility, scalability, and performance while reducing operational overhead. The approach relies on Platform-as-a-Service (PaaS) and Software-as-a-Service (SaaS) offerings from AWS.</p>
+    
+    <h2>Frontend</h2>
+    <ul>
+        <li><strong>Elastic Beanstalk</strong>: Manages EC2 instances, load balancer, and auto-scaling. Uses an S3 bucket for storing application artifacts.</li>
+    </ul>
+    
+    <h2>Backend</h2>
+    <ul>
+        <li><strong>Amazon RDS</strong>: Database platform for MySQL or other supported databases. Handles scaling, backups, and maintenance automatically.</li>
+        <li><strong>Amazon ElastiCache</strong>: In-memory caching service, replacing Memcached.</li>
+        <li><strong>Amazon MQ</strong>: Message broker service, replacing RabbitMQ.</li>
+        <li><strong>Amazon Route 53</strong>: DNS service to resolve URLs to endpoints.</li>
+        <li><strong>Amazon CloudFront</strong>: Content Delivery Network (CDN) for a global audience.</li>
+    </ul>
+    
+    <h2>Comparison of Services</h2>
+    <table>
+        <tr>
+            <th>Legacy Service</th>
+            <th>AWS Replacement</th>
+        </tr>
+        <tr>
+            <td>Tomcat on EC2</td>
+            <td>Elastic Beanstalk</td>
+        </tr>
+        <tr>
+            <td>Load Balancer (Manual Setup)</td>
+            <td>Elastic Load Balancer</td>
+        </tr>
+        <tr>
+            <td>NFS</td>
+            <td>S3 or EFS</td>
+        </tr>
+        <tr>
+            <td>MySQL on VM/EC2</td>
+            <td>Amazon RDS</td>
+        </tr>
+        <tr>
+            <td>Memcached on VM/EC2</td>
+            <td>Amazon ElastiCache</td>
+        </tr>
+        <tr>
+            <td>RabbitMQ on VM/EC2</td>
+            <td>Amazon MQ</td>
+        </tr>
+        <tr>
+            <td>DNS</td>
+            <td>Amazon Route 53</td>
+        </tr>
+        <tr>
+            <td>Content Delivery</td>
+            <td>Amazon CloudFront</td>
+        </tr>
+    </table>
+</body>
+</html>
