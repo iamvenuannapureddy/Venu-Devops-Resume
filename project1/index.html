@@ -3,34 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>vProfile AWS Refactoring Project</title>
+    <title>vProfile Application Refactoring</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 40px;
             padding: 20px;
-            background-image: url('devops-bg.jpg'); /* Replace with actual image URL */
+            background-image: url('devops-bg.jpg'); /* Add your background image file */
             background-size: cover;
             background-position: center;
-            background-attachment: fixed; /* Keeps background fixed */
-            color: white; /* Change text color for visibility */
+            background-attachment: fixed;
         }
-        h1, h2, h3 { color: #ffcc00; } /* Yellow headings */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: rgba(255, 255, 255, 0.2); color: white; }
-        td { background-color: rgba(0, 0, 0, 0.4); color: white; }
+        .container {
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #0073e6;
+            color: white;
+        }
     </style>
 </head>
 <body>
-    <h1>AWS Refactoring Project</h1>
-    
-    <h2>Project Overview</h2>
-    <p>This project focuses on refactoring and re-architecting the vProfile application stack using AWS services...</p>
-    
+
+<div class="container">
+    <h1>Project Overview</h1>
+    <p>This project focuses on refactoring and re-architecting the vProfile application stack using AWS services. In the previous project, we deployed the application on both local machines and AWS Cloud using a lift-and-shift strategy. In this project, we adopt a re-architecture or refactoring strategy to enhance agility, scalability, and performance while reducing operational overhead. The approach relies on Platform-as-a-Service (PaaS) and Software-as-a-Service (SaaS) offerings from AWS.</p>
+
     <h2>Frontend</h2>
     <ul>
-        <li><strong>Elastic Beanstalk</strong>: Manages EC2 instances, load balancer, and auto-scaling...</li>
+        <li><strong>Elastic Beanstalk</strong>: Manages EC2 instances, load balancer, and auto-scaling. S3 bucket for storing application artifacts.</li>
+    </ul>
+
+    <h2>Backend</h2>
+    <ul>
+        <li><strong>Amazon RDS</strong>: Database platform for MySQL or other supported databases. Handles scaling, backups, and maintenance automatically.</li>
+        <li><strong>Amazon ElastiCache</strong>: In-memory caching service. Replacement for Memcached.</li>
+        <li><strong>Amazon MQ</strong>: Message broker service (replacement for RabbitMQ).</li>
+        <li><strong>Amazon Route 53</strong>: DNS service to resolve URLs to endpoints.</li>
+        <li><strong>Amazon CloudFront</strong>: Content Delivery Network (CDN) for a global audience.</li>
     </ul>
 
     <h2>Comparison of Services</h2>
@@ -47,7 +76,34 @@
             <td>Load Balancer (Manual Setup)</td>
             <td>Elastic Load Balancer</td>
         </tr>
+        <tr>
+            <td>NFS</td>
+            <td>S3 or EFS</td>
+        </tr>
+        <tr>
+            <td>MySQL on VM/EC2</td>
+            <td>Amazon RDS</td>
+        </tr>
+        <tr>
+            <td>Memcached on VM/EC2</td>
+            <td>Amazon ElastiCache</td>
+        </tr>
+        <tr>
+            <td>RabbitMQ on VM/EC2</td>
+            <td>Amazon MQ</td>
+        </tr>
+        <tr>
+            <td>DNS</td>
+            <td>Amazon Route 53</td>
+        </tr>
+        <tr>
+            <td>Content Delivery</td>
+            <td>Amazon CloudFront</td>
+        </tr>
     </table>
+</div>
+
 </body>
 </html>
+
 
