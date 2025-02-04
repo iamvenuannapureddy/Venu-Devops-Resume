@@ -1,4 +1,4 @@
-# To attach your **GoDaddy domain (`venuresume.pro`)** to your **GitHub Pages URL (`https://iamvenuannapureddy.github.io/Venu-Devops-Resume/`)**, follow these steps:
+## To attach your **GoDaddy domain (`venuresume.pro`)** to your **GitHub Pages URL (`https://iamvenuannapureddy.github.io/Venu-Devops-Resume/`)**, follow these steps:
 
 ---
 
