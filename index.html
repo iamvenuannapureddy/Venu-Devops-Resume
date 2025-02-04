@@ -5,6 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Portfolio</title>
     <link rel="stylesheet" href="assets/styles.css">
+    <style>
+        body {
+            background-image: url('assets/background.jpg'); /* Adjust the path if needed */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: Arial, sans-serif;
+            color: white;
+            text-align: center;
+        }
+
+        header {
+            background: rgba(0, 0, 0, 0.6); /* Semi-transparent background for readability */
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h1, h2 {
+            color: #ffcc00; /* Highlighted text color */
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul li {
+            margin: 10px 0;
+        }
+
+        ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        ul li a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        footer {
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -14,8 +65,8 @@
         <section>
             <h2>Projects</h2>
             <ul>
-                <li><a href="project1/index.html">Project 1: AWS Refactoring Project</a></li>
-                <li><a href="project2/index.html">Project 2: Containerization Project</a></li>
+                <li><a href="project1/index.html">Project 1: CI/CD on AWS</a></li>
+                <li><a href="project2/index.html">Project 2: EKS Deployment</a></li>
                 <li><a href="project3/index.html">Project 3: Java Web App with Elastic Beanstalk</a></li>
                 <li><a href="project4/index.html">Project 4: Terraform Infrastructure</a></li>
                 <li><a href="project5/index.html">Project 5: Ansible Automation</a></li>
@@ -32,3 +83,4 @@
     </footer>
 </body>
 </html>
+
