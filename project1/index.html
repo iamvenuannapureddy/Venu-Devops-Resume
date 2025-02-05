@@ -3,23 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>vProfile Application Refactoring</title>
+    <title>Refactoring with AWS</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 40px;
+            margin: 20px;
             padding: 20px;
-            background-image: url('devops-bg.jpg'); /* Add your background image file */
+            background-image: url('background.jpg'); /* Add your image path */
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-        }
-        .container {
-            max-width: 800px;
-            background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            color: #333;
         }
         h1, h2, h3 {
             color: #333;
@@ -27,10 +21,10 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin: 20px 0;
         }
         table, th, td {
-            border: 1px solid #ccc;
+            border: 1px solid #ddd;
         }
         th, td {
             padding: 10px;
@@ -43,25 +37,33 @@
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h1>Project Overview</h1>
+    <h1>Refactoring with AWS</h1>
+    <h2>Project Overview</h2>
     <p>This project focuses on refactoring and re-architecting the vProfile application stack using AWS services. In the previous project, we deployed the application on both local machines and AWS Cloud using a lift-and-shift strategy. In this project, we adopt a re-architecture or refactoring strategy to enhance agility, scalability, and performance while reducing operational overhead. The approach relies on Platform-as-a-Service (PaaS) and Software-as-a-Service (SaaS) offerings from AWS.</p>
-
-    <h2>Frontend</h2>
+    
+    <h2>Objectives</h2>
     <ul>
-        <li><strong>Elastic Beanstalk</strong>: Manages EC2 instances, load balancer, and auto-scaling. S3 bucket for storing application artifacts.</li>
+        <li>Flexible infrastructure.</li>
+        <li>Pay-as-you-go model.</li>
+        <li>Infrastructure as Code (IaC).</li>
+        <li>Utilize PaaS and SaaS for ease of management.</li>
+        <li>Minimize operational overhead.</li>
     </ul>
-
-    <h2>Backend</h2>
+    
+    <h2>AWS Services Overview</h2>
+    <h3>Frontend</h3>
     <ul>
-        <li><strong>Amazon RDS</strong>: Database platform for MySQL or other supported databases. Handles scaling, backups, and maintenance automatically.</li>
-        <li><strong>Amazon ElastiCache</strong>: In-memory caching service. Replacement for Memcached.</li>
-        <li><strong>Amazon MQ</strong>: Message broker service (replacement for RabbitMQ).</li>
-        <li><strong>Amazon Route 53</strong>: DNS service to resolve URLs to endpoints.</li>
-        <li><strong>Amazon CloudFront</strong>: Content Delivery Network (CDN) for a global audience.</li>
+        <li><strong>Elastic Beanstalk:</strong> Manages EC2 instances, load balancer, and auto-scaling. Uses an S3 bucket for storing application artifacts.</li>
     </ul>
-
+    <h3>Backend</h3>
+    <ul>
+        <li><strong>Amazon RDS:</strong> Database platform for MySQL or other supported databases. Handles scaling, backups, and maintenance automatically.</li>
+        <li><strong>Amazon ElastiCache:</strong> In-memory caching service (replacement for Memcached).</li>
+        <li><strong>Amazon MQ:</strong> Message broker service (replacement for RabbitMQ).</li>
+        <li><strong>Amazon Route 53:</strong> DNS service to resolve URLs to endpoints.</li>
+        <li><strong>Amazon CloudFront:</strong> Content Delivery Network (CDN) for a global audience.</li>
+    </ul>
+    
     <h2>Comparison of Services</h2>
     <table>
         <tr>
@@ -101,9 +103,22 @@
             <td>Amazon CloudFront</td>
         </tr>
     </table>
-</div>
-
+    
+    <h2>Architecture Design</h2>
+    <h3>Frontend Flow</h3>
+    <ol>
+        <li>User accesses the URL resolved by Route 53.</li>
+        <li>Route 53 forwards requests to CloudFront.</li>
+        <li>CloudFront caches content and forwards requests to the Application Load Balancer (ALB) within Elastic Beanstalk.</li>
+        <li>ALB routes requests to EC2 instances (auto-scaled by Beanstalk).</li>
+        <li>Artifacts are stored in an S3 bucket.</li>
+    </ol>
+    
+    <h3>Backend Flow</h3>
+    <ol>
+        <li>Backend services include Amazon MQ, ElastiCache, and RDS.</li>
+        <li>All services interact through secure connections enabled by properly configured security groups.</li>
+    </ol>
 </body>
 </html>
-
 
