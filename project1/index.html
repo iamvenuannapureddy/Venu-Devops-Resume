@@ -121,4 +121,98 @@
     </ol>
 </body>
 </html>
+    <h2>Step-by-Step Execution</h2>
+    <ol>
+        <li><strong>AWS Account Setup:</strong>
+            <ul>
+                <li>Log in to your AWS account.</li>
+                <li>Create a key pair for accessing Beanstalk EC2 instances (if needed).</li>
+            </ul>
+        </li>
+        <li><strong>Security Groups:</strong>
+            <ul>
+                <li>Create a security group for backend services (RDS, ElastiCache, Amazon MQ).</li>
+                <li>Configure backend security group to allow internal traffic.</li>
+                <li>Update backend security group to allow traffic from Beanstalk security group.</li>
+            </ul>
+        </li>
+        <li><strong>Backend Services:</strong>
+            <ul>
+                <li><strong>Amazon RDS:</strong> Create an RDS instance for the database. Note the RDS endpoint.</li>
+                <li><strong>Amazon ElastiCache:</strong> Create an ElastiCache cluster (Redis/Memcached). Note the ElastiCache endpoint.</li>
+                <li><strong>Amazon MQ:</strong> Create an Amazon MQ broker. Note the MQ endpoint.</li>
+            </ul>
+        </li>
+        <li><strong>Elastic Beanstalk Environment:</strong>
+            <ul>
+                <li>Create an Elastic Beanstalk environment for the application.</li>
+                <li>Configure the environment:</li>
+                <ul>
+                    <li>Set health check URL to /login.</li>
+                    <li>Add an HTTPS listener (port 443) to the load balancer.</li>
+                </ul>
+            </ul>
+        </li>
+        <li><strong>Database Initialization:</strong>
+            <ul>
+                <li>Launch an EC2 instance.</li>
+                <li>Use MySQL client to log in to RDS:
+                    <pre>mysql -h &lt;RDS_ENDPOINT&gt; -u &lt;USERNAME&gt; -p</pre>
+                </li>
+                <li>Initialize the database with required schema and data.</li>
+            </ul>
+        </li>
+        <li><strong>Build and Deploy Artifacts:</strong>
+            <ul>
+                <li>Update application properties with backend service endpoints:</li>
+                <ul>
+                    <li>RDS endpoint.</li>
+                    <li>ElastiCache endpoint.</li>
+                    <li>Amazon MQ endpoint.</li>
+                </ul>
+                <li>Build the application artifact using Maven or your preferred tool.</li>
+                <li>Deploy the artifact to the Beanstalk environment.</li>
+            </ul>
+        </li>
+        <li><strong>Content Delivery Network:</strong>
+            <ul>
+                <li>Create a CloudFront distribution.</li>
+                <li>Use an SSL certificate for HTTPS.</li>
+                <li>Configure CloudFront to point to the Beanstalk ALB.</li>
+            </ul>
+        </li>
+        <li><strong>DNS Configuration:</strong>
+            <ul>
+                <li>Update DNS records in Route 53:</li>
+                <ul>
+                    <li>Map the custom domain to the CloudFront endpoint.</li>
+                    <li>Alternatively, update DNS in GoDaddy or another registrar.</li>
+                </ul>
+            </ul>
+        </li>
+        <li><strong>Final Testing:</strong>
+            <ul>
+                <li>Access the application using the public URL.</li>
+                <li>Verify frontend and backend functionality.</li>
+                <li>Test scalability by simulating load.</li>
+            </ul>
+        </li>
+    </ol>
+    
+    <h2>Key Benefits of Refactoring</h2>
+    <ul>
+        <li>Reduced operational overhead.</li>
+        <li>Improved agility and performance.</li>
+        <li>Easy scalability with auto-scaling and managed services.</li>
+        <li>Cost efficiency through a pay-as-you-go model.</li>
+        <li>Enhanced global reach with CDN (CloudFront).</li>
+    </ul>
+
+    <h1>Refactoring with AWS</h1>
+    <h2>Project Overview</h2>
+    <p>This project focuses on refactoring and re-architecting the vProfile application stack using AWS services. In the previous project, we deployed the application on both local machines and AWS Cloud using a lift-and-shift strategy. In this project, we adopt a re-architecture or refactoring strategy to enhance agility, scalability, and performance while reducing operational overhead. The approach relies on Platform-as-a-Service (PaaS) and Software-as-a-Service (SaaS) offerings from AWS.</p>
+    
+    <!-- Rest of the document remains unchanged -->
+</body>
+</html>
 
