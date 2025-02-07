@@ -50,58 +50,58 @@
         <li>Minimize operational overhead.</li>
     </ul>
 <body>
-    <h1>Roles and Responsibilities in the Project</h1>
+    <h2>Roles and Responsibilities in the Project</h2>
     
-    <h2>1. Solution Architect</h2>
+    <h3>1. Solution Architect</h3>
     <ul>
         <li>Design the refactored architecture using AWS services.</li>
         <li>Define the integration between PaaS and SaaS offerings.</li>
         <li>Ensure best practices for security, scalability, and performance.</li>
     </ul>
     
-    <h2>2. DevOps Engineer</h2>
+    <h3>2. DevOps Engineer</h3>
     <ul>
         <li>Implement Infrastructure as Code (IaC) using Terraform or CloudFormation.</li>
         <li>Set up CI/CD pipelines for deployment automation.</li>
         <li>Configure security groups, IAM roles, and networking.</li>
     </ul>
     
-    <h2>3. Cloud Engineer</h2>
+    <h3>3. Cloud Engineer</h3>
     <ul>
         <li>Deploy and manage AWS services (Elastic Beanstalk, RDS, ElastiCache, Amazon MQ, CloudFront, Route 53).</li>
         <li>Optimize cloud resources for cost efficiency and performance.</li>
         <li>Ensure high availability and scalability of the application.</li>
     </ul>
     
-    <h2>4. Application Developer</h2>
+    <h3>4. Application Developer</h3>
     <ul>
         <li>Modify the application to support managed AWS services (e.g., connect to RDS, ElastiCache, and Amazon MQ).</li>
         <li>Build and package the application artifacts.</li>
         <li>Ensure compatibility with AWS-managed services.</li>
     </ul>
     
-    <h2>5. Database Administrator (DBA)</h2>
+    <h3>5. Database Administrator (DBA)</h3>
     <ul>
         <li>Set up and manage Amazon RDS.</li>
         <li>Optimize database performance and security.</li>
         <li>Perform data migration from the existing database to RDS.</li>
     </ul>
     
-    <h2>6. Security Engineer</h2>
+    <h3>6. Security Engineer</h3>
     <ul>
         <li>Implement IAM policies, roles, and permissions.</li>
         <li>Configure encryption, security groups, and VPC settings.</li>
         <li>Monitor security risks and ensure compliance.</li>
     </ul>
     
-    <h2>7. QA Engineer</h2>
+    <h3>7. QA Engineer</h3>
     <ul>
         <li>Conduct functional and performance testing post-migration.</li>
         <li>Verify application behavior across AWS-managed services.</li>
         <li>Perform load testing to validate auto-scaling capabilities.</li>
     </ul>
     
-    <h2>8. Network Engineer</h2>
+    <h3>8. Network Engineer</h3>
     <ul>
         <li>Configure DNS settings in Route 53.</li>
         <li>Set up CloudFront for content delivery optimization.</li>
@@ -258,7 +258,50 @@
             </ul>
         </li>
     </ol>
-    
+    <h2>Challenges and Solutions</h2>
+    <table>
+        <tr>
+            <th>Challenges</th>
+            <th>Solutions</th>
+        </tr>
+        <tr>
+            <td>Application Compatibility with AWS PaaS Services</td>
+            <td>Refactor the application to use environment variables for connecting to AWS-managed services (RDS, ElastiCache, MQ).</td>
+        </tr>
+        <tr>
+            <td>Data Migration to Amazon RDS</td>
+            <td>Use AWS Database Migration Service (DMS) or manual SQL dump and restore method.</td>
+        </tr>
+        <tr>
+            <td>Security & Access Management</td>
+            <td>Implement IAM roles, security groups, and VPC settings to restrict access and enhance security.</td>
+        </tr>
+        <tr>
+            <td>Managing Deployment Pipeline</td>
+            <td>Automate deployments using CI/CD with Jenkins/GitHub Actions and AWS Elastic Beanstalk CLI.</td>
+        </tr>
+        <tr>
+            <td>Scaling the Application Efficiently</td>
+            <td>Use Elastic Beanstalk's auto-scaling and load balancer features to handle traffic spikes.</td>
+        </tr>
+        <tr>
+            <td>Caching for Performance Improvement</td>
+            <td>Replace on-prem Memcached with Amazon ElastiCache for better response times.</td>
+        </tr>
+        <tr>
+            <td>Message Queue Migration</td>
+            <td>Migrate from self-managed RabbitMQ to Amazon MQ with minimal downtime.</td>
+        </tr>
+        <tr>
+            <td>DNS and SSL Configuration</td>
+            <td>Use Amazon Route 53 for DNS and AWS Certificate Manager (ACM) for SSL/TLS certificates.</td>
+        </tr>
+        <tr>
+            <td>Ensuring High Availability & Disaster Recovery</td>
+            <td>Use Multi-AZ deployments for RDS, snapshots for backup, and CloudFront for global content delivery.</td>
+        </tr>
+    </table>
+
     <h2>Key Benefits of Refactoring</h2>
     <ul>
         <li>Reduced operational overhead.</li>
