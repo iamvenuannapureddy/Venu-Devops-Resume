@@ -3,131 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Containerization Project Overview</title>
+    <title>CI/CD Project Using AWS & Elastic Beanstalk</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-        h1, h2 {
-            color: #333;
-        }
-        h3 {
-            color: #444;
-        }
-        ul {
-            margin: 10px 0;
-        }
-        li {
-            margin: 5px 0;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .section-title {
-            background-color: #f2f2f2;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        code {
-            background-color: #f4f4f4;
-            padding: 3px 6px;
-            border-radius: 4px;
-        }
-        .image-container {
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background-image: url('https://source.unsplash.com/1600x900/?cloud,technology'); 
+            background-size: cover; 
+            background-position: center; 
+            color: #ffffff; 
             text-align: center;
-            margin-bottom: 20px;
+        }
+        h1, h2 { color: #f1c40f; }
+        ul { line-height: 1.6; text-align: left; display: inline-block; }
+        .section { 
+            margin: 30px auto; 
+            background: rgba(0, 0, 0, 0.7); 
+            padding: 20px; 
+            border-radius: 10px; 
+            width: 80%;
+            text-align: left;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Containerization Project </h1>
-
-        <div class="section-title">
-            <h2>Project Overview</h2>
-        </div>
-        <p><strong>Objective:</strong> To containerize an existing application using Docker and deploy it efficiently.</p>
-        <p><strong>Why Containerization?</strong> Containerization allows for consistent, cost-efficient, and scalable deployments. It is well-suited for microservices and DevOps workflows.</p>
-
-        <div class="section-title">
-            <h2>Prerequisites</h2>
-        </div>
+    <h1>CI/CD Project Using AWS & Elastic Beanstalk</h1>
+    
+    <div class="section">
+        <h2>Project Overview</h2>
+        <p>This CI/CD pipeline leverages AWS cloud services and Elastic Beanstalk to automate code integration, testing, and deployment. Using AWS services such as S3, CodePipeline, and Beanstalk, it ensures a streamlined software development lifecycle. The goal is to maintain high-quality code while reducing manual intervention and deployment time.</p>
+    </div>
+    
+    <div class="section">
+        <h2>CI Pipeline (Continuous Integration)</h2>
         <ul>
-            <li>Basic understanding of containers and Docker.</li>
-            <li>Familiarity with Docker commands (e.g., <code>docker run</code>, <code>docker build</code>). </li>
-            <li>Understanding Docker Compose for managing multi-container environments.</li>
+            <li><strong>S3 Bucket Creation:</strong> Store build artifacts securely in AWS S3.</li>
+            <li><strong>Simple Notification Service (SNS):</strong> Notify stakeholders of pipeline events.</li>
+            <li><strong>AWS CodePipeline Setup:</strong> Automate CI/CD process within AWS.</li>
+            <li><strong>Connect Bitbucket Repository:</strong> Sync code changes from Bitbucket.</li>
+            <li><strong>CodeBuild for Artifact Creation:</strong> Compile and package the code.</li>
+            <li><strong>Sonar Code Analysis:</strong> Ensure code quality and security compliance.</li>
+            <li><strong>Deploying Artifacts to S3:</strong> Store processed artifacts for further deployment.</li>
+            <li><strong>Pipeline Notification Setup:</strong> Use SNS to notify teams about build status.</li>
+            <li><strong>Pipeline Execution:</strong> Code changes trigger the entire CI/CD process.</li>
+            <li><strong>Testing:</strong> Run unit and integration tests to validate code.</li>
         </ul>
-
-        <div class="section-title">
-            <h2>Tools</h2>
-        </div>
+    </div>
+    
+    <div class="section">
+        <h2>CD Pipeline (Continuous Delivery)</h2>
         <ul>
-            <li><strong>Docker:</strong> For container runtime and building images.</li>
-            <li><strong>Docker Compose:</strong> For managing multi-container environments.</li>
-            <li><strong>Docker Hub:</strong> For storing and sharing container images.</li>
+            <li><strong>Developer Commits Code:</strong> Triggers the pipeline.</li>
+            <li><strong>Code Analysis:</strong> Check for quality and security vulnerabilities.</li>
+            <li><strong>Dependency Management:</strong> Resolve and manage package dependencies.</li>
+            <li><strong>Build Job:</strong> Code is compiled and built into an artifact.</li>
+            <li><strong>Deployment to Elastic Beanstalk:</strong> Deploy applications to AWS Elastic Beanstalk.</li>
+            <li><strong>Automated Testing:</strong> Run functional and regression tests.</li>
+            <li><strong>Test Results Storage:</strong> Store test reports in S3 for review.</li>
         </ul>
-
-        <div class="section-title">
-            <h2>Technology and Architecture Diagram</h2>
-        </div>
-        <div class="image-container">
-            <img src="path/to/your/architecture-diagram.png" alt="Architecture Diagram" style="max-width: 100%; height: auto;">
-            <p><strong>Figure 1:</strong> High-level architecture diagram for the V-Profile application stack.</p>
-        </div>
-
-        <div class="section-title">
-            <h2>Steps for Containerization</h2>
-        </div>
-
-        <h3>Step 1: Review the Existing Application Setup</h3>
-        <p>Review how the V-Profile stack was set up manually on virtual machines (VMs) in earlier projects.</p>
-
-        <h3>Step 2: Identify Base Images</h3>
-        <p>Identify and pull appropriate base images from Docker Hub for each service:</p>
+    </div>
+    
+    <div class="section">
+        <h2>Elastic Beanstalk Deployment Strategies</h2>
         <ul>
-            <li><strong>Nginx</strong></li>
-            <li><strong>Tomcat</strong></li>
-            <li><strong>MySQL</strong></li>
-            <li><strong>Memcached</strong></li>
-            <li><strong>RabbitMQ</strong></li>
+            <li><strong>Rolling Updates:</strong> Deploy updates in batches to minimize downtime.</li>
+            <li><strong>Immutable Deployments:</strong> Create a new environment for each deployment to ensure rollback safety.</li>
+            <li><strong>Blue-Green Deployment:</strong> Deploy new versions in parallel and switch traffic when validated.</li>
         </ul>
-
-        <h3>Step 3: Write Dockerfiles for Customization</h3>
-        <p>Write a <code>Dockerfile</code> for each service that needs customization:</p>
+    </div>
+    
+    <div class="section">
+        <h2>Tools Used</h2>
         <ul>
-            <li><strong>Nginx:</strong> Add custom configuration files.</li>
-            <li><strong>Tomcat:</strong> Deploy application artifacts (WAR files).</li>
-            <li><strong>MySQL:</strong> Include initial schema and data.</li>
+            <li><strong>Version Control:</strong> Bitbucket</li>
+            <li><strong>CI/CD:</strong> AWS CodePipeline</li>
+            <li><strong>Code Analysis:</strong> SonarQube</li>
+            <li><strong>Build Tool:</strong> AWS CodeBuild</li>
+            <li><strong>Artifact Storage:</strong> AWS S3</li>
+            <li><strong>Deployment:</strong> AWS Elastic Beanstalk</li>
+            <li><strong>Monitoring & Notifications:</strong> AWS SNS</li>
         </ul>
-
-        <h3>Step 4: Build Docker Images</h3>
-        <p>Use the <code>docker build</code> command to create custom Docker images for each service.</p>
-
-        <h3>Step 5: Create a Docker Compose File</h3>
-        <p>Write a <code>docker-compose.yml</code> file to define the multi-container environment.</p>
+    </div>
+    
+    <div class="section">
+        <h2>Workflow</h2>
+        <ol>
+            <li>Developers push code to Bitbucket.</li>
+            <li>CodePipeline detects the commit and triggers the pipeline.</li>
+            <li>Code is analyzed for quality and security issues.</li>
+            <li>CodeBuild compiles the code and generates an artifact.</li>
+            <li>Artifacts are uploaded to an S3 bucket.</li>
+            <li>Elastic Beanstalk deploys the built application.</li>
+            <li>Automated tests validate the deployment.</li>
+            <li>Notifications are sent via SNS to update stakeholders.</li>
+        </ol>
+    </div>
+    
+    <div class="section">
+        <h2>Challenges & Solutions</h2>
         <ul>
-            <li>Specify the services, their dependencies, and network configurations.</li>
-            <li>Reference the custom Docker images built earlier.</li>
+            <li><strong>Challenge 1:</strong> Managing build failures due to inconsistent dependencies.<br>
+                <strong>Solution:</strong> Use dependency management tools and cache builds efficiently.</li>
+            <li><strong>Challenge 2:</strong> Securing artifacts stored in S3.<br>
+                <strong>Solution:</strong> Implement S3 encryption and access control policies.</li>
+            <li><strong>Challenge 3:</strong> Ensuring smooth application updates.<br>
+                <strong>Solution:</strong> Use Blue-Green and Immutable Deployments in Elastic Beanstalk.</li>
         </ul>
-
-        <h3>Step 6: Test Locally</h3>
-        <p>Use Docker Compose to spin up the containers and verify that all services work as expected in the local environment.</p>
-
-        <h3>Step 7: Push Images to Docker Hub</h3>
-        <p>Tag and push the custom Docker images to your Docker Hub repository for reuse and distribution.</p>
-
-        <h3>Step 8: Deploy and Monitor</h3>
-        <p>Deploy the containerized application to your chosen cloud environment (e.g., AWS, Azure) and monitor its performance.</p>
     </div>
 </body>
 </html>
