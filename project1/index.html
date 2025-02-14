@@ -3,16 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CI/CD PROJECT USING JAVA WEB APP IN JENKINS PIPELINE</title>
+    <title>CI/CD Project Description</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        h1, h2 { color: #2c3e50; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background-image: url('project1.jpg'); 
+            background-size: cover; 
+            background-position: center; 
+            color: #ffffff; 
+        }
+        h1, h2 { color: #f1c40f; }
         ul { line-height: 1.6; }
-        .section { margin-bottom: 30px; }
+        .section { 
+            margin-bottom: 30px; 
+            background: rgba(0, 0, 0, 0.7); 
+            padding: 20px; 
+            border-radius: 10px; 
+        }
     </style>
 </head>
 <body>
-    <h1>CI/CD PROJECT </h1>
+    <h1>CI/CD Project Description</h1>
+    
+    <div class="section">
+        <h2>Project Overview</h2>
+        <p>This CI/CD pipeline automates the process of building, testing, and deploying applications efficiently. It ensures that code changes are seamlessly integrated, tested, and deployed to production with minimal manual intervention. The pipeline leverages Jenkins for automation, Docker for containerization, and Amazon ECS for deployment. Code quality and security are enforced using tools like SonarQube and Checkstyle. The overall goal is to improve software delivery speed, quality, and reliability while maintaining a structured workflow.</p>
+    </div>
     
     <div class="section">
         <h2>CI Pipeline (Continuous Integration)</h2>
@@ -70,6 +87,17 @@
             <li>Notifications are sent via Slack on pipeline status.</li>
         </ol>
     </div>
+
+    <div class="section">
+        <h2>Challenges & Solutions</h2>
+        <ul>
+            <li><strong>Challenge 1:</strong> Managing frequent build failures due to dependency issues.<br>
+                <strong>Solution:</strong> Implement caching mechanisms and use reliable artifact repositories like Nexus.</li>
+            <li><strong>Challenge 2:</strong> Security vulnerabilities in container images.<br>
+                <strong>Solution:</strong> Integrate security scanning tools like Trivy and regularly update base images.</li>
+            <li><strong>Challenge 3:</strong> Slow deployment due to inefficient resource allocation.<br>
+                <strong>Solution:</strong> Optimize ECS cluster scaling policies and use spot instances for cost-effective scaling.</li>
+        </ul>
+    </div>
 </body>
 </html>
-
