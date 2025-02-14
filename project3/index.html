@@ -1,1 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Infrastructure Automation for Web Application on AWS Using Terraform</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      line-height: 1.6;
+      background-image: url('https://www.example.com/your-background-image.jpg'); /* Replace with your image URL */
+      background-size: cover;  /* Ensures the image covers the entire page */
+      background-position: center center; /* Centers the image */
+      background-repeat: no-repeat; /* Prevents repeating the image */
+    }
+    h1, h2 {
+      color: #2c3e50;
+    }
+    h3 {
+      color: #34495e;
+    }
+    .section {
+      margin-bottom: 30px;
+      background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .section p {
+      text-indent: 20px;
+    }
+    .section ul {
+      margin-left: 40px;
+    }
+    .section code {
+      background-color: #f4f4f4;
+      padding: 5px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
 
+  <h1>Infrastructure Automation for Web Application on AWS Using Terraform</h1>
+
+  <!-- Section 1: Description -->
+  <div class="section">
+    <h2>Description</h2>
+    <p>This project aims to demonstrate how to automate the deployment of infrastructure for a web application on AWS using Terraform. The infrastructure includes essential components such as VPC, EC2 instances, RDS, Security Groups, Auto Scaling Groups (ASG), Elastic Load Balancer (ELB), and Amazon Elastic Kubernetes Service (EKS). Terraform will be used as the Infrastructure as Code (IaC) tool to automate the provisioning and management of resources on AWS.</p>
+    <p>The web application will be hosted on EC2 instances behind an ELB and will utilize EKS for container orchestration. Terraform ensures that this setup is repeatable, scalable, and maintainable.</p>
+  </div>
+
+  <!-- Section 2: Workflow -->
+  <div class="section">
+    <h2>Workflow</h2>
+    <p>The workflow for automating the infrastructure using Terraform includes the following steps:</p>
+    <ul>
+      <li><strong>Step 1:</strong> Configure the AWS provider and initialize Terraform.</li>
+      <li><strong>Step 2:</strong> Define network components, such as VPC, subnets, and internet gateway.</li>
+      <li><strong>Step 3:</strong> Create security groups for EC2 instances, RDS databases, and ELB.</li>
+      <li><strong>Step 4:</strong> Provision EC2 instances and configure an Auto Scaling Group (ASG) for scalability.</li>
+      <li><strong>Step 5:</strong> Set up an Elastic Load Balancer (ELB) for distributing traffic to EC2 instances.</li>
+      <li><strong>Step 6:</strong> Create an EKS cluster for Kubernetes container management.</li>
+      <li><strong>Step 7:</strong> Use Terraform modules to reuse configurations for better structure and maintainability.</li>
+      <li><strong>Step 8:</strong> Apply changes, verify infrastructure, and output the necessary information like public IPs of instances and EKS access details.</li>
+      <li><strong>Step 9:</strong> Manage state files with S3 and state locking using DynamoDB to prevent concurrent modifications.</li>
+    </ul>
+  </div>
+
+  <!-- Section 3: Main Topics in Terraform -->
+  <div class="section">
+    <h2>Main Topics in Terraform</h2>
+    <h3>1. Providers</h3>
+    <p>A provider is responsible for creating and managing resources in a specific cloud platform. In this case, we will use the AWS provider.</p>
+    <pre><code>
+provider "aws" {
+  region = "us-east-1"
+}
+    </code></pre>
+
+    <h3>2. State Management</h3>
+    <p>Terraform maintains state files to track the infrastructure resources it manages. Using remote state storage (S3) and state locking (DynamoDB) helps prevent conflicts when multiple users or systems apply changes to the same infrastructure.</p>
+    <pre><code>
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state"
+    key            = "terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-lock"
+  }
+}
+    </code></pre>
+
+    <h3>3. Modules</h3>
+    <p>Modules help organize and reuse Terraform code. You can structure your code into different modules like VPC, EC2, EKS, and RDS to keep things modular and reusable.</p>
+    <pre><code>
+module "vpc" {
+  source = "./modules/vpc"
+}
+
+module "ec2" {
+  source = "./modules/ec2"
+}
+
+module "eks" {
+  source = "./modules/eks"
+}
+    </code></pre>
+
+    <h3>4. Provisioners</h3>
+    <p>Provisioners are used to run scripts or commands on the created infrastructure to configure it further. These are optional and typically used for bootstrapping EC2 instances or configuring EKS clusters.</p>
+    <pre><code>
+resource "aws_instance" "web" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt update",
+      "sudo apt install -y nginx"
+    ]
+  }
+}
+    </code></pre>
+
+    <h3>5. Workspaces</h3>
+    <p>Workspaces allow you to manage different environments (e.g., dev, staging, prod) within a single Terraform configuration. Each workspace has its own state file.</p>
+    <pre><code>
+terraform workspace new dev
+terraform workspace select dev
+terraform apply
+    </code></pre>
+
+    <h3>6. Versioning</h3>
+    <p>Terraform supports versioning for infrastructure configurations, ensuring that changes are tracked and the infrastructure can be rolled back to a previous state if necessary. Using version control systems like Git is essential for maintaining history and collaboration.</p>
+    <pre><code>
+git init
+git add .
+git commit -m "Initial Terraform Setup"
+    </code></pre>
+  </div>
+
+  <!-- Section 4: Creating EKS, ELB, and ASG -->
+  <div class="section">
+    <h2>Creating EKS, ELB, and ASG</h2>
+
+    <h3>1. EKS Cluster Creation</h3>
+    <p>Amazon Elastic Kubernetes Service (EKS) is a fully managed Kubernetes service that simplifies the deployment and management of containerized applications. We will create an EKS cluster to host our containerized applications.</p>
+    <pre><code>
+resource "aws_eks_cluster" "eks_cluster" {
+  name     = "my-cluster"
+  role_arn = aws_iam_role.eks_cluster_role.arn
+
+  vpc_config {
+    subnet_ids = aws_subnet.subnet_ids
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.eks_cluster_policy]
+}
+    </code></pre>
+
+    <h3>2. Elastic Load Balancer (ELB) Creation</h3>
+    <p>Elastic Load Balancer (ELB) helps distribute incoming application traffic across multiple targets, such as EC2 instances. We will configure an Application Load Balancer (ALB) for routing traffic to our EC2 instances in the ASG.</p>
+    <pre><code>
+resource "aws_lb" "app_lb" {
+  name               = "app-lb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups   = [aws_security_group.lb_sg.id]
+  subnets           = aws_subnet.subnet_ids
+
+  enable_deletion_protection = false
+}
+    </code></pre>
+
+    <h3>3. Auto Scaling Group (ASG) Creation</h3>
+    <p>Auto Scaling Group (ASG) ensures that the desired number of EC2 instances are running at any time to handle application traffic. We will create an ASG linked to the ALB for dynamic scaling based on demand.</p>
+    <pre><code>
+resource "aws_autoscaling_group" "asg" {
+  desired_capacity     = 2
+  max_size             = 5
+  min_size             = 1
+  vpc_zone_identifier  = aws_subnet.subnet_ids
+  launch_configuration = aws_launch_configuration.launch_config.id
+  load_balancers       = [aws_lb.app_lb.id]
+
+  health_check_type = "ELB"
+  health_check_grace_period = 300
+}
+    </code></pre>
+
+  </div>
+
+  <!-- Section 5: Challenges and Solutions -->
+  <div class="section">
+    <h2>Challenges and Solutions</h2>
+    <h3>1. Challenge: Managing Multiple Environments</h3>
+    <p>Managing multiple environments (e.g., dev, staging, prod) can lead to inconsistencies in infrastructure, making it difficult to replicate environments accurately.</p>
+    <h4>Solution:</h4>
+    <p>Use Terraform workspaces to create isolated environments within the same configuration. This allows for better management of resources across different stages of deployment.</p>
+
+    <h3>2. Challenge: Handling State Management</h3>
+    <p>When multiple people are working on the same Terraform code, there can be issues with concurrent modifications to the state file.</p>
+    <h4>Solution:</h4>
+    <p>Store Terraform state files in an S3 bucket and use DynamoDB for state locking to prevent conflicts. This ensures that only one user can apply changes at a time.</p>
+
+    <h3>3. Challenge: Scaling Applications Automatically</h3>
+    <p>As traffic increases, scaling the infrastructure efficiently without downtime is a challenge.</p>
+    <h4>Solution:</h4>
+    <p>Use an Auto Scaling Group (ASG) in combination with Elastic Load Balancer (ELB) to dynamically scale EC2 instances based on traffic demands, ensuring that the application remains responsive during traffic spikes.</p>
+  </div>
+
+</body>
+</html>
