@@ -12,14 +12,17 @@
             background-size: cover; 
             background-position: center; 
             color: #ffffff; 
+            text-align: center;
         }
         h1, h2 { color: #f1c40f; }
-        ul { line-height: 1.6; }
+        ul { line-height: 1.6; text-align: left; display: inline-block; }
         .section { 
-            margin-bottom: 30px; 
+            margin: 30px auto; 
             background: rgba(0, 0, 0, 0.7); 
             padding: 20px; 
             border-radius: 10px; 
+            width: 80%;
+            text-align: left;
         }
     </style>
 </head>
@@ -53,8 +56,8 @@
         <h2>CD Pipeline (Continuous Delivery)</h2>
         <ul>
             <li><strong>Updating GitHub Webhook:</strong> Ensure Jenkins IP is up-to-date for automatic execution of pipelines.</li>
-            <li><strong>Docker Image Preparation:</strong> Build Docker images from Dockerfiles and store them in repositories like Amazon ACR.</li>
-            <li><strong>Jenkins Setup:</strong> Install necessary plugins (Amazon ACR, Docker plugin) and configure Jenkins pipeline.</li>
+            <li><strong>Docker Image Preparation:</strong> Build Docker images from Dockerfiles and store them in repositories like Docker Hub.</li>
+            <li><strong>Jenkins Setup:</strong> Install necessary plugins (Docker Hub, Docker plugin) and configure Jenkins pipeline.</li>
             <li><strong>Deployment:</strong> Set up Amazon ECS clusters, task definitions, and services for staging and production.</li>
             <li><strong>Testing:</strong> Conduct integration, load, and performance testing to ensure stability.</li>
         </ul>
@@ -68,7 +71,7 @@
             <li><strong>Code Analysis:</strong> Checkstyle, SonarQube</li>
             <li><strong>Build Tool:</strong> Maven</li>
             <li><strong>Artifact Repository:</strong> Nexus</li>
-            <li><strong>Containerization:</strong> Docker, Amazon ACR</li>
+            <li><strong>Containerization:</strong> Docker, Docker Hub</li>
             <li><strong>Deployment:</strong> Amazon ECS</li>
             <li><strong>Monitoring & Notifications:</strong> Slack</li>
         </ul>
@@ -81,7 +84,7 @@
             <li>Jenkins automatically triggers the pipeline on code commit.</li>
             <li>Unit tests and code analysis are executed.</li>
             <li>If successful, Maven builds and stores artifacts in Nexus.</li>
-            <li>Docker images are built and pushed to Amazon ACR.</li>
+            <li>Docker images are built and pushed to Docker Hub.</li>
             <li>Jenkins deploys images to Amazon ECS clusters.</li>
             <li>Automated testing is conducted to validate deployment.</li>
             <li>Notifications are sent via Slack on pipeline status.</li>
