@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ansible Automation - Package Installation, Security, and Monitoring</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        pre {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: monospace;
+            color: #d63384;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ansible Automation Project</h1>
+    <h2>1. Inventory File (inventory.ini)</h2>
+    <pre><code>[debian]
+debian-server-1 ansible_host=192.168.1.10 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[redhat]
+redhat-server-1 ansible_host=192.168.1.20 ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa</code></pre>
+
+    <h2>2. Playbook (playbook.yml)</h2>
+    <pre><code>---
+- name: Automate package installation, security updates, configurations, and monitoring
+  hosts: all
+  become: yes
+  roles:
+    - common</code></pre>
+
+    <h2>3. Package Installation (tasks/main.yml)</h2>
+    <pre><code>---
+- name: Install common packages on Debian-based systems
+  apt:
+    name: "{{ common_packages }}"
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+
+- name: Install common packages on Red Hat-based systems
+  yum:
+    name: "{{ common_packages }}"
+    state: present
+  when: ansible_os_family == "RedHat"</code></pre>
+
+    <h2>4. Security Updates (tasks/security.yml)</h2>
+    <pre><code>---
+- name: Update and upgrade Debian-based systems
+  apt:
+    upgrade: dist
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+
+- name: Update and upgrade Red Hat-based systems
+  yum:
+    name: "*"
+    state: latest
+  when: ansible_os_family == "RedHat"</code></pre>
+
+    <h2>5. Monitoring Setup (tasks/monitoring.yml)</h2>
+    <pre><code>---
+- name: Download Prometheus Node Exporter
+  get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/latest/download/node_exporter-1.5.0.linux-amd64.tar.gz"
+    dest: "/tmp/node_exporter.tar.gz"
+
+- name: Extract Prometheus Node Exporter
+  unarchive:
+    src: "/tmp/node_exporter.tar.gz"
+    dest: "/usr/local/bin/"
+    remote_src: yes</code></pre>
+
+    <h2>6. Running the Playbook</h2>
+    <pre><code>ansible-playbook -i inventory.ini playbook.yml</code></pre>
+
+    <h2>7. CI/CD Integration (Jenkinsfile)</h2>
+    <pre><code>pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/user/ansible-automation.git'
+            }
+        }
+        stage('Run Ansible') {
+            steps {
+                sh 'ansible-playbook -i inventory.ini playbook.yml'
+            }
+        }
+    }
+}</code></pre>
+</body>
+</html>
