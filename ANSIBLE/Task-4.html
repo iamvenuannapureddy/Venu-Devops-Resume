@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Multi-Region File and Directory Management Using Ansible on AWS</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        code, pre { background: #f4f4f4; padding: 5px; display: block; border-radius: 5px; }
+        pre { padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1> Automated Multi-Region File and Directory Management Using Ansible on AWS</h1>
+    
+    <h2>Task Overview</h2>
+    <p>This task automates <strong>multi-region deployment</strong> and <strong>backup automation</strong> for file and directory management using <strong>Ansible and Terraform</strong> on AWS. The automation ensures:</p>
+    <ul>
+        <li><strong>Deployment of EC2 instances across multiple AWS regions</strong></li>
+        <li>Automated creation of required directories</li>
+        <li>Copying and managing files</li>
+        <li>Setting proper file and directory permissions</li>
+        <li>Deploying a sample configuration file (nginx.conf)</li>
+        <li>Ensuring configurations are applied and services restarted</li>
+        <li>Backup automation using Amazon S3 and AWS Backup</li>
+    </ul>
+    
+    <h2>1. Tools & Technologies</h2>
+    <ul>
+        <li><strong>Infrastructure Provisioning:</strong> Terraform</li>
+        <li><strong>Configuration Management:</strong> Ansible</li>
+        <li><strong>Cloud Platform:</strong> AWS (EC2, IAM, VPC, Security Groups, CloudWatch, S3, AWS Backup)</li>
+        <li><strong>Version Control:</strong> Git/GitHub</li>
+        <li><strong>CI/CD:</strong> Jenkins, GitHub Actions</li>
+        <li><strong>Monitoring:</strong> AWS CloudWatch, Prometheus, Grafana</li>
+    </ul>
+    
+    <h2>2. Task Architecture</h2>
+    <ol>
+        <li><strong>Terraform provisions AWS infrastructure across multiple regions:</strong>
+            <ul>
+                <li>EC2 instances in <strong>primary and secondary AWS regions</strong></li>
+                <li>Security Groups, IAM roles, and networking</li>
+                <li>S3 bucket for backup storage</li>
+                <li>AWS Backup policies for scheduled file backups</li>
+            </ul>
+        </li>
+        <li><strong>Ansible manages file and directory configurations:</strong>
+            <ul>
+                <li>Creates required directories</li>
+                <li>Copies configuration files (nginx.conf)</li>
+                <li>Sets correct file and directory permissions</li>
+                <li>Restarts services after configuration updates</li>
+            </ul>
+        </li>
+        <li><strong>Backup automation using AWS Backup & S3:</strong>
+            <ul>
+                <li>Periodic backups of important files and directories</li>
+                <li>Retention policies and automated snapshot creation</li>
+            </ul>
+        </li>
+        <li><strong>CI/CD pipeline automates deployments:</strong>
+            <ul>
+                <li>GitHub Actions/Jenkins triggers Ansible playbook</li>
+                <li>Ensures continuous configuration enforcement</li>
+            </ul>
+        </li>
+    </ol>
+    
+    <h2>3. Multi-Region Infrastructure Setup using Terraform</h2>
+    <h3>Step 1: Create Multi-Region Terraform Configuration (main.tf)</h3>
+    <pre><code>provider "aws" {
+  alias  = "primary"
+  region = "us-east-1"
+}
+
+provider "aws" {
+  alias  = "secondary"
+  region = "us-west-2"
+}
+
+resource "aws_vpc" "main_primary" {
+  provider   = aws.primary
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "main_secondary" {
+  provider   = aws.secondary
+  cidr_block = "10.1.0.0/16"
+}</code></pre>
+    
+    <h2>4. Configuring Ansible for Multi-Region EC2 Instances</h2>
+    <h3>Step 2: Define Ansible Inventory (hosts)</h3>
+    <pre><code>[primary]
+web_primary ansible_host=&lt;PRIMARY_EC2_IP&gt; ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/aws-key.pem
+
+[secondary]
+web_secondary ansible_host=&lt;SECONDARY_EC2_IP&gt; ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/aws-key.pem</code></pre>
+    
+    <h2>7. Project Deliverables</h2>
+    <ul>
+        <li>Terraform script for AWS multi-region infrastructure</li>
+        <li>Ansible playbook for file and directory management</li>
+        <li>Jenkins pipeline for automation</li>
+        <li>AWS S3 backup setup for configuration files</li>
+        <li>AWS Backup automation for EC2 snapshots</li>
+        <li>CI/CD integration</li>
+    </ul>
+    
+    <h2>Conclusion</h2>
+    <p>This project ensures <strong>high availability and disaster recovery</strong> by deploying <strong>multi-region</strong> infrastructure, automating <strong>file management</strong> with <strong>Ansible</strong>, and integrating <strong>backup automation</strong> using <strong>AWS S3 and AWS Backup</strong>. The CI/CD pipeline ensures seamless deployments and updates. 🚀</p>
+</body>
+</html>
