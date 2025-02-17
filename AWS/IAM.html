@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS IAM Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+        }
+        code {
+            background: #eee;
+            padding: 3px 5px;
+            border-radius: 4px;
+        }
+        .steps {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-left: 5px solid #2e7d32;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>AWS Identity and Access Management (IAM)</h1>
+        <p>AWS IAM is a service that helps manage user access and permissions for AWS resources.</p>
+
+        <h2>Key IAM Concepts</h2>
+        <ul>
+            <li><strong>IAM User:</strong> Represents an individual user with AWS access.</li>
+            <li><strong>IAM Group:</strong> A collection of users with shared permissions.</li>
+            <li><strong>IAM Role:</strong> Used for temporary access permissions.</li>
+            <li><strong>IAM Policies:</strong> JSON documents defining permissions.</li>
+            <li><strong>IAM Access Keys:</strong> Credentials for programmatic access.</li>
+        </ul>
+
+        <h2>Step-by-Step Guide</h2>
+        
+        <div class="steps">
+            <h3>Step 1: Sign in to AWS</h3>
+            <p>Go to <a href="https://console.aws.amazon.com/iam/">AWS IAM Console</a> and log in.</p>
+        </div>
+
+        <div class="steps">
+            <h3>Step 2: Create an IAM User</h3>
+            <ol>
+                <li>Navigate to <strong>IAM > Users</strong> and click <strong>Add user</strong>.</li>
+                <li>Enter a username and select <strong>AWS Management Console Access</strong>.</li>
+                <li>Choose <strong>Programmatic access</strong> if CLI/API access is needed.</li>
+                <li>Click <strong>Next: Permissions</strong> and assign policies.</li>
+                <li>Click <strong>Create User</strong>.</li>
+            </ol>
+        </div>
+
+        <div class="steps">
+            <h3>Step 3: Create an IAM Group (Optional)</h3>
+            <ol>
+                <li>Navigate to <strong>IAM > Groups</strong> and click <strong>Create group</strong>.</li>
+                <li>Enter a group name and attach policies.</li>
+                <li>Add users to the group and click <strong>Create</strong>.</li>
+            </ol>
+        </div>
+
+        <div class="steps">
+            <h3>Step 4: Create an IAM Role</h3>
+            <ol>
+                <li>Go to <strong>IAM > Roles</strong> and click <strong>Create role</strong>.</li>
+                <li>Select a <strong>trusted entity</strong> (e.g., AWS service or another AWS account).</li>
+                <li>Attach an appropriate policy.</li>
+                <li>Review and click <strong>Create role</strong>.</li>
+            </ol>
+        </div>
+
+        <h2>Best Practices</h2>
+        <ul>
+            <li>Use <strong>IAM roles</strong> instead of access keys where possible.</li>
+            <li>Follow the <strong>least privilege principle</strong>.</li>
+            <li>Enable <strong>Multi-Factor Authentication (MFA)</strong>.</li>
+            <li>Regularly <strong>rotate credentials</strong> and review IAM policies.</li>
+        </ul>
+
+    </div>
+
+</body>
+</html>
