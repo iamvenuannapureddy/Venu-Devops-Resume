@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project: Basic Ansible Playbook with Inventory</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+            background-color: #f4f4f4;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background: #eee;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: monospace;
+            background: #ddd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Project: Basic Ansible Playbook with Inventory</h1>
+    
+    <h2>Objective</h2>
+    <p>To create an Ansible playbook that:</p>
+    <ol>
+        <li>Defines an inventory of hosts.</li>
+        <li>Pings all hosts to check connectivity.</li>
+        <li>Checks the uptime of each host.</li>
+        <li>Provides a structured output of the results.</li>
+    </ol>
+    
+    <h2>Project Implementation Steps</h2>
+    
+    <h3>1. Prerequisites</h3>
+    <p>Before implementing this project, ensure you have:</p>
+    <ul>
+        <li><strong>Ansible installed</strong> on your control node (Linux/Mac).</li>
+        <li><strong>SSH access</strong> to target hosts.</li>
+        <li><strong>Python installed</strong> on managed nodes (needed for Ansible execution).</li>
+        <li><strong>Public SSH keys</strong> copied to managed nodes for passwordless authentication.</li>
+    </ul>
+    
+    <h3>2. Setup Inventory File</h3>
+    <p>Ansible uses an <strong>inventory file</strong> to define hosts and groups.</p>
+    <h4>Step 2.1: Create an Inventory File</h4>
+    <p>Create a file called <code>inventory.ini</code> and define the managed nodes.</p>
+    <pre><code>[webservers]
+web1 ansible_host=192.168.1.10 ansible_user=ubuntu
+web2 ansible_host=192.168.1.11 ansible_user=ubuntu
+
+[databases]
+db1 ansible_host=192.168.1.20 ansible_user=ubuntu</code></pre>
+    <p>[webservers] and [databases] are groups.</p>
+    <p>ansible_host defines the target IP.</p>
+    <p>ansible_user specifies the SSH user.</p>
+    
+    <h3>3. Write the Ansible Playbook</h3>
+    <p>Create a playbook file named ping_uptime.yml.</p>
+    <pre><code>---
+- name: Ping and check uptime of hosts
+  hosts: all
+  gather_facts: no
+  tasks:
+
+    - name: Ping all hosts
+      ansible.builtin.ping:
+
+    - name: Check uptime of hosts
+      ansible.builtin.command: uptime
+      register: uptime_output
+
+    - name: Display uptime
+      ansible.builtin.debug:
+        msg: "Uptime for {{ inventory_hostname }}: {{ uptime_output.stdout }}"</code></pre>
+ 
+  <h3>Explanation:</h3>
+    <p>Ping Task: Uses the ping module to check connectivity.</p>
+    <p>Uptime Task: Runs the uptime command to get system uptime.</p>
+    <p>Debug Task: Displays the output in a readable format.</p>
+  
+    <h3>4. Configure Ansible Hosts File</h3>
+    <p>Edit the <strong>Ansible configuration file</strong> (ansible.cfg) to use the custom inventory.</p>
+    <pre><code>[defaults]
+inventory = inventory.ini
+host_key_checking = False</code></pre>
+    
+    <h3>5. Run the Playbook</h3>
+    <p>Execute the playbook to test connectivity and check uptime.</p>
+    <pre><code>ansible-playbook -i inventory.ini ping_uptime.yml</code></pre>
+    
+    <h3>6. Expected Output</h3>
+    <p>If everything is configured correctly, you should see output like:</p>
+    <pre><code>TASK [Ping all hosts] *****************************************************
+ok: [web1]
+ok: [web2]
+ok: [db1]
+
+TASK [Check uptime of hosts] ***********************************************
+changed: [web1]
+changed: [web2]
+changed: [db1]
+
+TASK [Display uptime] ******************************************************
+ok: [web1] => {
+    "msg": "Uptime for web1: 12:35:46 up 5 days,  4:10,  1 user,  load average: 0.10, 0.05, 0.01"
+}
+ok: [web2] => {
+    "msg": "Uptime for web2: 12:35:46 up 3 days,  2:45,  1 user,  load average: 0.05, 0.02, 0.00"
+}
+ok: [db1] => {
+    "msg": "Uptime for db1: 12:35:46 up 10 days,  8:30,  2 users,  load average: 0.20, 0.10, 0.05"
+}</code></pre>
+    
+    <h2>Enhancements and Next Steps</h2>
+    <ul>
+        <li><strong>Add More Checks</strong>: CPU load, memory usage, disk space.</li>
+        <li><strong>Improve Output</strong>: Store results in a log file.</li>
+        <li><strong>Automate Execution</strong>: Run playbook on a schedule using <code>cron</code> or <code>Ansible Tower</code>.</li>
+    </ul>
+    <p>This project is a <strong>fundamental step</strong> in learning Ansible automation.</p>
+</body>
+</html>
