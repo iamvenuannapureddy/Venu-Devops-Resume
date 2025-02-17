@@ -35,44 +35,56 @@
     <p>2.Identify the OS type (Debian or RedHat) and install appropriate packages using apt or yum/dnf.</p>
     <p>3.Allow easy scaling by adding new servers to the inventory.</p>
     <p>4.Log the installation process for verification.</p>
+    
     <h3>Extended Ansible Project: Automating Package Installation, Security Updates, Configurations, and Monitoring
 This project extends our basic package installation playbook to include:</h3>
+    <P>Package Installation - Installs essential packages (nginx, git, curl).</P>
+    <P>Security Updates - Ensures the system is up-to-date with patches.</P>
+    <P>Configuration Management - Configures nginx with a sample webpage.</P>
+    <P>Monitoring Setup - Installs and configures Prometheus Node Exporter for system monitoring.</P>
+    <P>CI/CD Integration - Optionally triggers updates via Jenkins/GitHub Actions.</P>
 
-Package Installation - Installs essential packages (nginx, git, curl).
-Security Updates - Ensures the system is up-to-date with patches.
-Configuration Management - Configures nginx with a sample webpage.
-Monitoring Setup - Installs and configures Prometheus Node Exporter for system monitoring.
-CI/CD Integration - Optionally triggers updates via Jenkins/GitHub Actions.</p>
-
-    <h2>1. Project Structure</h2>
-    <pre><code>ansible-package-installation/
-│── inventory.ini
-│── playbook.yml
-│── roles/
-│   ├── common/
-│   │   ├── tasks/
-│   │   │   ├── main.yml
-│   │   ├── vars/
-│   │   │   ├── main.yml
-│── ansible.cfg
-    </code></pre>
+    <h1>Ansible Automation Project</h1>
     
-    <h2>1. Inventory File (inventory.ini)</h2>
+    <h2>Project Structure</h2>
+    <pre><code>
+    ansible-automation/
+    │── inventory.ini
+    │── playbook.yml
+    │── roles/
+    │   ├── common/
+    │   │   ├── tasks/
+    │   │   │   ├── main.yml
+    │   │   │   ├── security.yml
+    │   │   │   ├── monitoring.yml
+    │   │   │   ├── nginx.yml
+    │   │   ├── templates/
+    │   │   │   ├── nginx.conf.j2
+    │   │   ├── vars/
+    │   │   │   ├── main.yml
+    │── ansible.cfg
+    │── jenkinsfile (Optional for CI/CD)
+</code></pre>
+
+    <h2>1.Inventory File (inventory.ini)</h2>
+      <p>Define your servers.</p>
     <pre><code>[debian]
 debian-server-1 ansible_host=192.168.1.10 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa
 
 [redhat]
 redhat-server-1 ansible_host=192.168.1.20 ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa</code></pre>
 
-    <h2>2. Playbook (playbook.yml)</h2>
+    <h2>2.Playbook (playbook.yml)</h2>
     <pre><code>---
-- name: Automate package installation, security updates, configurations, and monitoring
+- name: Automate package installation, security updates, configurations, user management, and monitoring
   hosts: all
   become: yes
   roles:
-    - common</code></pre>
+    - common
+    </code></pre>
 
-    <h2>3. Package Installation (tasks/main.yml)</h2>
+    <h2>3.Role: Common Tasks (roles/common/tasks/main.yml)</h2>
+      <p>This installs essential packages.</p>
     <pre><code>---
 - name: Install common packages on Debian-based systems
   apt:
@@ -85,9 +97,11 @@ redhat-server-1 ansible_host=192.168.1.20 ansible_user=ec2-user ansible_ssh_priv
   yum:
     name: "{{ common_packages }}"
     state: present
-  when: ansible_os_family == "RedHat"</code></pre>
+  when: ansible_os_family == "RedHat"
+</code></pre>
 
-    <h2>4. Security Updates (tasks/security.yml)</h2>
+    <h2>4.Security Updates (roles/common/tasks/security.yml)</h2>
+      <p>This applies security patches.</p>
     <pre><code>---
 - name: Update and upgrade Debian-based systems
   apt:
@@ -99,10 +113,40 @@ redhat-server-1 ansible_host=192.168.1.20 ansible_user=ec2-user ansible_ssh_priv
   yum:
     name: "*"
     state: latest
-  when: ansible_os_family == "RedHat"</code></pre>
+  when: ansible_os_family == "RedHat"
+</code></pre>
 
-    <h2>5. Monitoring Setup (tasks/monitoring.yml)</h2>
+    <h2>5.Nginx Configuration (roles/common/tasks/nginx.yml)</h2>
+      <p>This configures nginx with a sample webpage.</p>
     <pre><code>---
+- name: Copy Nginx configuration
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify: Restart nginx
+
+- name: Start and enable nginx service
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+</code></pre>
+  
+    <h2>6.Nginx Configuration Template (roles/common/templates/nginx.conf.j2)</h2>
+      <p>A simple nginx configuration.</p>
+    <pre><code>server {
+    listen 80;
+    server_name _;
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+    }
+}
+    </code></pre>
+  
+    <h2>7.Monitoring Setup (roles/common/tasks/monitoring.yml)</h2>
+      <p>This installs and configures Prometheus Node Exporter for system monitoring.</p>
+      <pre><code>---
 - name: Download Prometheus Node Exporter
   get_url:
     url: "https://github.com/prometheus/node_exporter/releases/latest/download/node_exporter-1.5.0.linux-amd64.tar.gz"
@@ -112,13 +156,60 @@ redhat-server-1 ansible_host=192.168.1.20 ansible_user=ec2-user ansible_ssh_priv
   unarchive:
     src: "/tmp/node_exporter.tar.gz"
     dest: "/usr/local/bin/"
-    remote_src: yes</code></pre>
+    remote_src: yes
 
-    <h2>6. Running the Playbook</h2>
-    <pre><code>ansible-playbook -i inventory.ini playbook.yml</code></pre>
+- name: Create systemd service for Node Exporter
+  copy:
+    dest: "/etc/systemd/system/node_exporter.service"
+    content: |
+      [Unit]
+      Description=Prometheus Node Exporter
+      After=network.target
 
-    <h2>7. CI/CD Integration (Jenkinsfile)</h2>
-    <pre><code>pipeline {
+      [Service]
+      User=nobody
+      ExecStart=/usr/local/bin/node_exporter
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Start and enable Node Exporter
+  systemd:
+    name: node_exporter
+    state: started
+    enabled: yes
+  </code></pre>
+      
+      <h2>8.Variables (roles/common/vars/main.yml)</h2>
+        <p>Define package lists.</p>
+         <pre><code>---
+common_packages:
+  - nginx
+  - git
+  - curl
+  - htop
+  - net-tools
+  - unzip
+</code></pre>
+      
+      <h2>9.Handlers (roles/common/handlers/main.yml)</h2>
+        <p>Handlers restart services when configurations change.</p>
+        <pre><code>---
+- name: Restart nginx
+  service:
+    name: nginx
+    state: restarted
+</code></pre>
+      
+      <h2>10.Running the Playbook</h2>
+        <p>To execute:</p>
+          <pre><code>ansible-playbook -i inventory.ini playbook.yml
+</code></pre>
+
+      <h2>11.CI/CD Pipeline (Optional)</h2>
+        <p>This integrates with Jenkins.</p>
+        <h3>Jenkinsfile</h3>
+          <pre><code>pipeline {
     agent any
     stages {
         stage('Checkout') {
@@ -132,6 +223,20 @@ redhat-server-1 ansible_host=192.168.1.20 ansible_user=ec2-user ansible_ssh_priv
             }
         }
     }
-}</code></pre>
+}
+</code></pre>
+      
+      <h2>12.Validation</h2>
+        <p>Verify:</p>
+        <pre><code>nginx -v
+git --version
+curl --version
+systemctl status node_exporter
+</code></pre>
+
+      <h2>Outcome</h2>
+      <p>✅ Automated package installation, security updates, configuration, and monitoring.</p>
+      <p>✅ Ensures servers are secure and optimized.</p>
+      <p>✅ Ready for CI/CD pipeline integration.</p>
 </body>
 </html>
