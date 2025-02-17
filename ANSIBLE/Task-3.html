@@ -15,7 +15,7 @@
     <h1> Automated Service Management Using Ansible on AWS</h1>
     
     <h2>Task Overview</h2>
-    <p>This Task automates the installation, management, and monitoring of essential services (<code>nginx</code>, <code>apache2</code>, <code>sshd</code>) on AWS EC2 instances using <strong>Ansible</strong>. The automation ensures:</p>
+    <p>This Task automates the installation, management, and monitoring of essential services (nginx, apache2, sshd) on AWS EC2 instances using <strong>Ansible</strong>. The automation ensures:</p>
     <ul>
         <li>Deployment of EC2 instances with Terraform.</li>
         <li>Configuration of security groups, IAM roles, and networking.</li>
@@ -46,7 +46,7 @@
         </li>
         <li><strong>Ansible manages EC2 instances:</strong>
             <ul>
-                <li>Installs and configures <code>nginx</code>, <code>apache2</code>, and <code>sshd</code></li>
+                <li>Installs and configures nginx, apache2, and sshd</li>
                 <li>Enables and starts services</li>
                 <li>Manages logs and alerts using CloudWatch</li>
             </ul>
@@ -60,11 +60,11 @@
     </ol>
     
     <h2>3. Infrastructure Setup using Terraform</h2>
-    <h3>Step 1: Create Terraform Configuration (<code>main.tf</code>)</h3>
+    <h3>Step 1: Create Terraform Configuration (main.tf)</h3>
     <pre><code>provider "aws" {
   region = "us-east-1"
 }
-
+e
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 }
@@ -107,11 +107,11 @@ resource "aws_instance" "web" {
     </code></pre>
     
     <h2>4. Configuring Ansible for EC2 Instances</h2>
-    <h3>Step 2: Define Ansible Inventory (<code>hosts</code>)</h3>
+    <h3>Step 2: Define Ansible Inventory (hosts)</h3>
     <pre><code>[webservers]
 webserver ansible_host=&lt;EC2_PUBLIC_IP&gt; ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/aws-key.pem</code></pre>
     
-    <h3>Step 3: Create Ansible Playbook (<code>manage_services.yml</code>)</h3>
+    <h3>Step 3: Create Ansible Playbook (manage_services.yml)</h3>
     <pre><code>---
 - name: Manage Services on AWS EC2
   hosts: webservers
