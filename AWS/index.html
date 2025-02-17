@@ -1,1 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Services Overview</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        ul {
+            list-style-type: square;
+        }
+        .service {
+            background-color: #e0e0e0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        a {
+            color: #0073bb;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>AWS Services Overview</h1>
+
+    <h2>1. Compute Services</h2>
+    <div class="service">
+        <a href="https://aws.amazon.com/ec2/" target="_blank"><strong>Amazon EC2 (Elastic Compute Cloud)</strong></a>:
+        A web service that provides resizable compute capacity in the cloud. It allows users to run virtual servers in a variety of configurations.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/lambda/" target="_blank"><strong>AWS Lambda</strong></a>:
+        A serverless compute service that lets you run code without provisioning or managing servers. You pay only for the compute time you consume.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/elasticbeanstalk/" target="_blank"><strong>AWS Elastic Beanstalk</strong></a>:
+        An easy-to-use service for deploying and scaling web applications and services. It supports Java, .NET, PHP, Node.js, Python, and other platforms.
+    </div>
+
+    <h2>2. Storage Services</h2>
+    <div class="service">
+        <a href="https://aws.amazon.com/s3/" target="_blank"><strong>Amazon S3 (Simple Storage Service)</strong></a>:
+        An object storage service that provides scalable, durable, and low-cost storage for data backups, websites, and application assets.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/ebs/" target="_blank"><strong>Amazon EBS (Elastic Block Store)</strong></a>:
+        Provides persistent block storage for use with EC2 instances. It allows data to persist even after the associated EC2 instance is stopped or terminated.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/glacier/" target="_blank"><strong>Amazon Glacier</strong></a>:
+        A low-cost storage service for data archiving and long-term backup. It is designed for data that is rarely accessed.
+    </div>
+
+    <h2>3. Database Services</h2>
+    <div class="service">
+        <a href="https://aws.amazon.com/rds/" target="_blank"><strong>Amazon RDS (Relational Database Service)</strong></a>:
+        A managed relational database service supporting multiple database engines such as MySQL, PostgreSQL, and Oracle.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/dynamodb/" target="_blank"><strong>Amazon DynamoDB</strong></a>:
+        A fully managed NoSQL database service designed for applications that require high performance and scalability.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/rds/aurora/" target="_blank"><strong>Amazon Aurora</strong></a>:
+        A MySQL and PostgreSQL-compatible relational database built for the cloud, providing high availability and performance.
+    </div>
+
+    <h2>4. Networking Services</h2>
+    <div class="service">
+        <a href="https://aws.amazon.com/vpc/" target="_blank"><strong>AWS VPC (Virtual Private Cloud)</strong></a>:
+        Enables you to launch AWS resources into a virtual network that you've defined. It helps isolate resources for security and traffic routing.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/route53/" target="_blank"><strong>Amazon Route 53</strong></a>:
+        A scalable DNS and domain name registration service that routes traffic to AWS resources.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/directconnect/" target="_blank"><strong>AWS Direct Connect</strong></a>:
+        A dedicated network connection from your on-premises data center to AWS for improved performance and security.
+    </div>
+
+    <h2>5. Security and Identity Services</h2>
+    <div class="service">
+        <a href="https://aws.amazon.com/iam/" target="_blank"><strong>AWS IAM (Identity and Access Management)</strong></a>:
+        Allows you to securely control access to AWS services and resources, defining who can access them and what actions they can perform.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/shield/" target="_blank"><strong>AWS Shield</strong></a>:
+        A managed DDoS protection service that safeguards applications from attacks.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/waf/" target="_blank"><strong>AWS WAF (Web Application Firewall)</strong></a>:
+        A service that protects your web applications from common web exploits that may affect application availability, compromise security, or consume excessive resources.
+    </div>
+
+    <h2>6. Analytics Services</h2>
+    <div class="service">
+        <a href="https://aws.amazon.com/emr/" target="_blank"><strong>Amazon EMR (Elastic MapReduce)</strong></a>:
+        A cloud-native big data platform that allows you to process vast amounts of data quickly and cost-effectively using tools such as Hadoop and Spark.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/redshift/" target="_blank"><strong>Amazon Redshift</strong></a>:
+        A fast, scalable data warehouse that allows you to analyze data using standard SQL queries. It integrates well with other AWS services.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/glue/" target="_blank"><strong>AWS Glue</strong></a>:
+        A fully managed ETL service that makes it easy to prepare and transform data for analytics.
+    </div>
+
+    <h2>7. Monitoring and Management Services</h2>
+    <div class="service">
+        <a href="https://aws.amazon.com/cloudwatch/" target="_blank"><strong>AWS CloudWatch</strong></a>:
+        A monitoring service that provides visibility into resource and application metrics, allowing you to automate responses to changes.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/cloudtrail/" target="_blank"><strong>AWS CloudTrail</strong></a>:
+        A service that enables governance, compliance, and operational auditing of your AWS account by recording API calls.
+    </div>
+    <div class="service">
+        <a href="https://aws.amazon.com/systems-manager/" target="_blank"><strong>AWS Systems Manager</strong></a>:
+        A suite of tools for automating operational tasks such as patch management, configuration, and system health monitoring.
+    </div>
+
+</body>
+</html>
 
