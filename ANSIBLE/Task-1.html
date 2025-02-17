@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ansible Automation - Package Installation, Security, and Monitoring</title>
+    <title>Ansible Package Automation </title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -28,6 +28,13 @@
 </head>
 <body>
     <h1>Ansible Automation Project</h1>
+    <h2>Description</h2>
+    <p>This project will:</p>
+    <p>1.Install common packages (nginx, git, curl) on multiple Linux servers.</p>
+    <p>2.Identify the OS type (Debian or RedHat) and install appropriate packages using apt or yum/dnf.</p>
+    <p>3.Allow easy scaling by adding new servers to the inventory.</p>
+    <p>4.Log the installation process for verification.</p>
+    
     <h2>1. Inventory File (inventory.ini)</h2>
     <pre><code>[debian]
 debian-server-1 ansible_host=192.168.1.10 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa
