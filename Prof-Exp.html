@@ -26,17 +26,18 @@
         h1, h2 {
             color: #ffcc00; /* Highlighted text color */
         }
-
         ul {
             list-style: none;
             padding: 0;
             text-align: left;
+            counter-reset: list-counter; /* Initialize the counter */
         }
 
         li {
             margin: 5px 0;
             text-align: left;
-        }
+            counter-increment: list-counter; /* Increment the counter */
+                }
 
         li a {
             color: white;
@@ -46,11 +47,23 @@
             background: rgba(0, 0, 0, 0.5);
             border-radius: 5px;
             display: inline-block;
+            position: relative;
+            padding-left: 30px; /* Space for numbering */
+        }
+
+        li a::before {
+            content: counter(list-counter) ". "; /* Display numbering */
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white; /* Number color */
+            font-weight: bold;
         }
 
         li a:hover {
             background: rgba(255, 255, 255, 0.2);
-        }
+        }   
     </style>
 </head>
 <body>
