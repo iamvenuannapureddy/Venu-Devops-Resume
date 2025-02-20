@@ -1,1 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centralized Logging Setup using Ansible (ELK Stack) – End-to-End Project Implementation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            background: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Centralized Logging Setup using Ansible (ELK Stack) – End-to-End Project Implementation</h1>
+    
+    <h2>Task Overview</h2>
+    <p>This Task involves setting up a centralized logging system using the <strong>ELK stack (Elasticsearch, Logstash, Kibana)</strong> and deploying <strong>Filebeat</strong> as a log shipper to forward logs from multiple application servers. The entire process will be automated using <strong>Ansible</strong>, ensuring a consistent, scalable, and efficient deployment.</p>
+    
+    <h2>Technology Stack</h2>
+    <ul>
+        <li><strong>Ansible</strong> – Automate the deployment of the ELK stack and log shippers.</li>
+        <li><strong>Elasticsearch</strong> – Store and index logs for querying.</li>
+        <li><strong>Logstash</strong> – Process and parse incoming logs.</li>
+        <li><strong>Kibana</strong> – Visualize and analyze logs.</li>
+        <li><strong>Filebeat</strong> – Lightweight shipper to forward logs to Logstash.</li>
+        <li><strong>Linux (Ubuntu/CentOS)</strong> – OS for hosting ELK and Filebeat.</li>
+    </ul>
+    
+    <h2>Project Architecture</h2>
+    <ul>
+        <li><strong>Application Servers</strong> – Run various applications generating logs.</li>
+        <li><strong>Filebeat Agents</strong> – Installed on application servers to collect and forward logs.</li>
+        <li><strong>Logstash Server</strong> – Processes and enriches logs before sending them to Elasticsearch.</li>
+        <li><strong>Elasticsearch Cluster</strong> – Stores and indexes logs for fast querying.</li>
+        <li><strong>Kibana</strong> – Provides a UI for log visualization and analysis.</li>
+    </ul>
+    
+    <h2>Step-by-Step Implementation using Ansible</h2>
+    
+    <h3>Step 1: Set Up Inventory File</h3>
+    <p>Create an Ansible inventory file defining the ELK and client servers.</p>
+    <pre><code>[elk]
+elk-master ansible_host=192.168.1.100 ansible_user=ubuntu
+
+[app_servers]
+app1 ansible_host=192.168.1.101 ansible_user=ubuntu
+app2 ansible_host=192.168.1.102 ansible_user=ubuntu</code></pre>
+    
+    <h3>Step 2: Create Ansible Playbooks</h3>
+    <h4>1. Install and Configure Elasticsearch</h4>
+    <p>Create a playbook install_elasticsearch.yml to install and configure Elasticsearch.</p>
+    <pre><code>- hosts: elk
+  become: yes
+  tasks:
+    - name: Install dependencies
+      apt:
+        name: [apt-transport-https, openjdk-11-jdk]
+        state: present
+
+    - name: Add Elasticsearch GPG Key
+      shell: wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
+
+    - name: Add Elasticsearch repository
+      copy:
+        dest: /etc/apt/sources.list.d/elastic-7.x.list
+        content: "deb https://artifacts.elastic.co/packages/7.x/apt stable main"
+
+    - name: Install Elasticsearch
+      apt:
+        name: elasticsearch
+        state: present
+        update_cache: yes
+
+    - name: Configure Elasticsearch
+      lineinfile:
+        path: /etc/elasticsearch/elasticsearch.yml
+        line: "{{ item }}"
+      with_items:
+        - "network.host: 0.0.0.0"
+        - "http.port: 9200"
+        - "cluster.name: elk-cluster"
+        - "node.name: elk-master"
+
+    - name: Start Elasticsearch service
+      systemd:
+        name: elasticsearch
+        enabled: yes
+        state: started</code></pre>
+    <h4>2. Install and Configure Logstash</h4>
+    <p>Create a playbook install_logstash.yml to install and configure Logstash.</p>
+    <pre><code>- hosts: elk
+  become: yes
+  tasks:
+    - name: Install Logstash
+      apt:
+        name: logstash
+        state: present
+
+    - name: Configure Logstash pipeline
+      copy:
+        dest: /etc/logstash/conf.d/logstash.conf
+        content: |
+          input {
+            beats {
+              port => 5044
+            }
+          }
+          filter {
+            mutate {
+              add_field => { "log_source" => "%{host}" }
+            }
+          }
+          output {
+            elasticsearch {
+              hosts => ["http://localhost:9200"]
+              index => "logs-%{+YYYY.MM.dd}"
+            }
+          }
+
+    - name: Restart Logstash
+      systemd:
+        name: logstash
+        enabled: yes
+        state: restarted
+</code></pre>
+    <h4>3. Install and Configure Kibana</h4>
+    <p>Create a playbook install_kibana.yml to install and configure Kibana.</p>
+    <pre><code>- hosts: elk
+  become: yes
+  tasks:
+    - name: Install Kibana
+      apt:
+        name: kibana
+        state: present
+
+    - name: Configure Kibana
+      lineinfile:
+        path: /etc/kibana/kibana.yml
+        line: "{{ item }}"
+      with_items:
+        - "server.host: '0.0.0.0'"
+        - "elasticsearch.hosts: ['http://localhost:9200']"
+
+    - name: Start Kibana service
+      systemd:
+        name: kibana
+        enabled: yes
+        state: started
+</code></pre>
+    <h4>4. Install and Configure Filebeat on Application Servers</h4>
+    <p>Create a playbook install_filebeat.yml to install and configure Filebeat.</p>
+    <pre><code>- hosts: app_servers
+  become: yes
+  tasks:
+    - name: Download Filebeat
+      get_url:
+        url: https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.x-amd64.deb
+        dest: /tmp/filebeat.deb
+
+    - name: Install Filebeat
+      shell: dpkg -i /tmp/filebeat.deb
+
+    - name: Configure Filebeat
+      copy:
+        dest: /etc/filebeat/filebeat.yml
+        content: |
+          filebeat.inputs:
+            - type: log
+              paths:
+                - /var/log/syslog
+                - /var/log/auth.log
+          output.logstash:
+            hosts: ["192.168.1.100:5044"]
+
+    - name: Start Filebeat
+      systemd:
+        name: filebeat
+        enabled: yes
+        state: started
+</code></pre>
+    <h3>Step 3: Run Ansible Playbooks</h3>
+    <p>Run the playbooks in order to set up the centralized logging system.</p>
+    <pre><code>ansible-playbook -i inventory install_elasticsearch.yml
+ansible-playbook -i inventory install_logstash.yml
+ansible-playbook -i inventory install_kibana.yml
+ansible-playbook -i inventory install_filebeat.yml</code></pre>
+    
+    <h2>Validation and Testing</h2>
+    <h3>1. Verify Elasticsearch</h3>
+    <p>Run the following command on the ELK server:</p>
+    <pre><code>curl -X GET "http://localhost:9200/_cluster/health?pretty"</code></pre>
+    
+    <h3>2. Verify Logstash</h3>
+    <p>Check if Logstash is listening on port 5044:</p>
+    <pre><code>netstat -tulnp | grep 5044</code></pre>
+    
+    <h3>3. Verify Kibana</h3>
+    <p>Open a web browser and go to:</p>
+    <pre><code>http://&lt;ELK_SERVER_IP&gt;:5601</code></pre>
+    <p>Check if Kibana is loading.</p>
+    
+    <h3>4. Verify Logs in Kibana</h3>
+    <ul>
+      <li>Go to <strong>Kibana Dashboard > Discover.</strong></li>
+      <li>Check if logs from application servers are visible.</li>
+    </ul>
+  
+    <h2>Security Considerations</h2>
+    <ul>
+      <li>Restrict access to Elasticsearch, Kibana, and Logstash using <strong>firewall rules.</strong></li>
+      <li>Configure <strong>TLS encryption</strong> for secure log transmission.</li>
+      <li>Implement <strong>role-based access control (RBAC)</strong> in Kibana.</li>
+    </ul>
+
+    <h2>Future Enhancements</h2>
+    <ul>
+      <li>Implement <strong>Loki and Grafana</strong> for lightweight log monitoring.</li>
+      <li>Deploy ELK in a <strong>Kubernetes environment</strong> using Helm charts.</li>
+      <li>Configure <strong>Elasticsearch clustering</strong> for better scalability.</li>
+    </ul>
+    <h2>Conclusion</h2>
+    <p>This project automates the deployment of a centralized logging system using Ansible, ensuring logs from multiple servers are 
+      collected, processed, stored, and visualized efficiently. The solution improves troubleshooting, security auditing, and performance 
+      monitoring across an enterprise infrastructure.</p>
+    
+</body>
+</html>
+
 
