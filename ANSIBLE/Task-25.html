@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Network Automation Project using Ansible</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background: #222;
+            color: #fff;
+            padding: 10px;
+            overflow-x: auto;
+        }
+        code {
+            color: #e83e8c;
+        }
+    </style>
+</head>
+<body>
+    <h1> Network Automation Task using Ansible</h1>
+    
+    <h2>Task Overview</h2>
+    <p>This Task automates the configuration of <strong>Cisco and Juniper network devices</strong> using <strong>Ansible</strong>. 
+      It ensures consistency, eliminates manual errors, and simplifies managing VLANs, ACLs, and routing protocols such as <strong>OSPF and BGP</strong>.</p>
+
+    <h2>Key Objectives</h2>
+    <ul>
+        <li>Automate the configuration of network devices.</li>
+        <li>Manage <strong>VLANs, ACLs, and routing protocols</strong> centrally.</li>
+        <li>Use <strong>Ansible playbooks</strong> to enforce policies consistently.</li>
+        <li>Implement <strong>network device backups</strong> before applying changes.</li>
+        <li>Validate configuration changes using <strong>Ansible facts</strong>.</li>
+    </ul>
+
+    <h2>Technology Stack</h2>
+    <ul>
+        <li><strong>Ansible</strong> (for automation)</li>
+        <li><strong>Python</strong> (for custom scripts)</li>
+        <li><strong>Cisco IOS & Junos</strong> (network devices)</li>
+        <li><strong>GNS3/EVE-NG</strong> (for lab testing)</li>
+        <li><strong>GitHub/GitLab</strong> (for version control)</li>
+        <li><strong>Jenkins</strong> (for CI/CD automation in network changes)</li>
+        <li><strong>Prometheus & Grafana</strong> (for monitoring)</li>
+    </ul>
+
+    <h2>Project Architecture</h2>
+    <pre>
++--------------------+
+|    Network Admin  |
++--------------------+
+         |
+         v
++--------------------+
+|   Ansible Tower    |  (Automation and Scheduling)
++--------------------+
+         |
+         v
++--------------------+
+|    Network Devices |  (Cisco Switches, Juniper Routers)
++--------------------+
+         |
+         v
++--------------------+
+| Monitoring System  |  (Prometheus & Grafana)
++--------------------+
+    </pre>
+
+    <h2>Project Implementation Steps</h2>
+    <h3>1. Setup Ansible Environment</h3>
+    <p>1. Install Ansible on the control node:</p>
+    <pre><code>sudo apt update && sudo apt install ansible -y</code></pre>
+    <p>2. Install network modules:</p>
+    <pre><code>ansible-galaxy collection install cisco.ios juniper.junos</code></pre>
+    <p>3. Create an inventory file (inventory.yml) with network devices:</p>
+    <pre><code>all:
+  hosts:
+    cisco_switch:
+      ansible_host: 192.168.1.1
+      ansible_user: admin
+      ansible_password: password
+      ansible_network_os: cisco.ios
+    juniper_router:
+      ansible_host: 192.168.1.2
+      ansible_user: admin
+      ansible_password: password
+      ansible_network_os: juniper.junos
+</code></pre>
+  
+    <h3>2. Automating VLAN Configuration</h3>
+    <p>Create an Ansible playbook (vlan_config.yml) to configure VLANs.</p>
+    <pre><code>- name: Configure VLANs on Cisco Switch
+  hosts: cisco_switch
+  gather_facts: no
+  tasks:
+    - name: Create VLANs
+      cisco.ios.ios_config:
+        lines:
+          - vlan 10
+          - name HR_VLAN
+          - vlan 20
+          - name FINANCE_VLAN
+        save_when: changed</code></pre>
+    <P>Run the playbook:</P>
+    <PRE><CODE>ansible-playbook vlan_config.yml
+</CODE></PRE>
+
+    <h3>3. Automating ACL Configuration</h3>
+    <P>Create an <STRONG>Ansible playbook</STRONG> (acl_config.yml) to apply ACLs.</P>
+    <pre><code>- name: Configure ACL on Cisco Switch
+  hosts: cisco_switch
+  gather_facts: no
+  tasks:
+    - name: Apply ACL for security
+      cisco.ios.ios_config:
+        lines:
+          - ip access-list standard BLOCK_SSH
+          - deny tcp any any eq 22
+          - permit ip any any
+        save_when: changed</code></pre>
+    <p>Run the playbook:</p>
+    <pre><code>ansible-playbook acl_config.yml
+</code></pre>
+
+    <h3>4. Automating Routing Protocol Configuration</h3>
+    <h4>OSPF for Cisco</h4>
+    <p>Create a playbook (ospf_config.yml) for <strong>OSPF on Cisco devices.</strong></p>
+    <pre><code>- name: Configure OSPF Routing
+  hosts: cisco_switch
+  gather_facts: no
+  tasks:
+    - name: Configure OSPF
+      cisco.ios.ios_config:
+        lines:
+          - router ospf 1
+          - network 192.168.1.0 0.0.0.255 area 0
+        save_when: changed</code></pre>
+    <p>Run:</p>
+    <pre><code>ansible-playbook ospf_config.yml
+</code></pre>
+  
+    <h4>BGP for Juniper</h4>
+    <p>Create a playbook (bgp_config.yml) for BGP on Juniper devices.</p>
+    <pre><code>- name: Configure BGP on Juniper
+  hosts: juniper_router
+  gather_facts: no
+  tasks:
+    - name: Configure BGP
+      juniper.junos.junos_config:
+        lines:
+          - set protocols bgp group EXTERNAL neighbor 192.168.2.1 peer-as 65000
+          - set protocols bgp group EXTERNAL neighbor 192.168.2.1 export EXPORT_POLICY
+        save_when: changed
+</code></pre>
+    <p>Run:</p>
+    <pre><code>ansible-playbook bgp_config.yml
+</code></pre>
+
+    <h3>5. Automating Backup of Network Configurations</h3>
+    <p>Create a playbook (backup_config.yml) to <strong>backup configurations</strong> before changes.</p>
+    <pre><code>- name: Backup Cisco Config
+  hosts: cisco_switch
+  tasks:
+    - name: Save Running Config
+      cisco.ios.ios_command:
+        commands: show running-config
+      register: config_output
+
+    - name: Save Config to Local File
+      copy:
+        content: "{{ config_output.stdout[0] }}"
+        dest: "backups/cisco_running_config_{{ ansible_date_time.date }}.txt"</code></pre>
+    <p>Run:</p>
+    <pre><code>ansible-playbook backup_config.yml
+</code></pre>
+
+    <h3>6. Continuous Integration with Jenkins</h3>
+    <ol>
+        <li>Install Jenkins Plugins:</li>
+            <ul>
+              <li>Ansible</li>
+              <li>Pipeline</li>
+              <li>Git</li>
+            </ul> 
+        <li>Create a Jenkins Pipeline Job</li>
+            <ul>
+                <li>Fetch the Ansible playbooks from GitHub</li>
+                <li>Run `ansible-playbook` commands</li>
+                <li>Monitor logs for failed configurations</li>
+            </ul>
+    </ol>
+
+    <h3>7. Monitoring and Alerts</h3>
+    <ol>
+        <li>Install Prometheus and Grafana for monitoring</li>
+        <li>Set up SNMP polling on network devices</li>
+        <li>Create Grafana dashboards to visualize network health</li>
+    </ol>
+
+    <h2>Project Outcome</h2>
+    <ul>
+        <li><strong>Automated Network Configuration:</strong> No manual configurations, reducing errors.</li>
+        <li><strong>Consistent Policies:</strong> VLANs, ACLs, and Routing are configured uniformly.</li>
+        <li><strong>Scalability:</strong> Easily manage hundreds of devices using Ansible.</li>
+        <li><strong>Backup & Restore:</strong> Ensures quick rollback in case of misconfigurations.</li>
+        <li><strong>CI/CD for Networking:</strong> Jenkins automates and validates changes before deployment.</li>
+    </ul>
+
+    <h2>Future Enhancements</h2>
+    <ul>
+      <li><strong>Enable Zero-Touch Provisioning (ZTP)</strong> for new network devices.</li>
+      <li><strong>Use Ansible Tower</strong> for role-based access and scheduling.</li>
+      <li><strong>Integrate with NetBox</strong> (IPAM/DCIM) for dynamic inventory.</li>
+    </ul>
+  
+    <h2>Conclusion</h2>
+    <p>This project provides a <strong>fully automated solution</strong> for managing <strong>Cisco and Juniper</strong> network devices using <strong>Ansible</strong>, ensuring consistency, security, and reliability.</p>
+</body>
+</html>
