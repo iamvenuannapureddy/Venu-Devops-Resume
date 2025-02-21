@@ -1,1 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Infrastructure Deployment with Ansible Vault</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background: #eee;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Secure Infrastructure Deployment with Ansible Vault</h1>
+    
+    <h2>Objective</h2>
+    <p>The goal of this Task is to securely store, manage, and automate the distribution of sensitive credentials using <strong>Ansible Vault</strong>. 
+      The project will integrate Ansible Vault into a <strong>CI/CD pipeline</strong> with <strong>Jenkins, GitHub, AWS Secrets Manager</strong>, and <strong>Terraform</strong> for end-to-end automation.</p>
+    
+    <h2>Technology Stack</h2>
+    <ul>
+        <li><strong>Configuration Management:</strong> Ansible</li>
+        <li><strong>Secrets Management:</strong> Ansible Vault, AWS Secrets Manager</li>
+        <li><strong>CI/CD:</strong> Jenkins, GitHub Actions</li>
+        <li><strong>Infrastructure as Code (IaC):</strong> Terraform</li>
+        <li><strong>Cloud Provider:</strong> AWS (EC2, S3, IAM, RDS, EKS)</li>
+        <li><strong>Version Control:</strong> GitHub</li>
+        <li><strong>Scripting:</strong> Shell, Python</li>
+    </ul>
+    
+    <h2>High-Level Architecture</h2>
+    <ol>
+        <li><strong>Developers store secrets securely</strong> in <strong>Ansible Vault</strong> and commit encrypted files to <strong>GitHub</strong>.</li>
+        <li><strong>Jenkins pipeline</strong> retrieves the encrypted secrets and decrypts them securely using a <strong>Vault password file stored in AWS Secrets Manager</strong>.</li>
+        <li><strong>Ansible Playbooks</strong> use these secrets to provision and configure AWS resources securely.</li>
+        <li><strong>Terraform</strong> provisions infrastructure while fetching secrets dynamically from <strong>Ansible Vault</strong> and <strong>AWS Secrets Manager</strong>.</li>
+        <li><strong>CI/CD pipeline deploys applications securely</strong> while ensuring secret rotation and compliance.</li>
+    </ol>
+    
+    <h2>Implementation Steps</h2>
+    
+    <h3>1. Setup Ansible Vault for Encrypting Sensitive Information</h3>
+      <ul>
+        <li>Create an Ansible Vault password file:</li>
+    <pre><code>echo "my_secret_password" > .vault_pass</code></pre>
+        <li>Encrypt sensitive credentials:</li>
+    <pre><code>ansible-vault encrypt secrets.yml --vault-password-file .vault_pass</code></pre>
+        <li>Example secrets.yml before encryption:</li>
+    <pre><code>db_user: admin
+db_password: SuperSecurePassword123
+aws_access_key: AKIAXXXXXXX
+aws_secret_key: 5y3NtXXXXXXX</code></pre>
+      </ul>
+  
+    <h3>2. Store the Vault Password Securely in AWS Secrets Manager</h3>
+    <ul><li>Store the Vault password in AWS Secrets Manager:</li></ul>
+    <pre><code>aws secretsmanager create-secret --name ansible-vault-password --secret-string "my_secret_password"</code></pre>
+    
+    <h3>3. Automate Vault Password Retrieval in CI/CD</h3>
+    <ul><li>Create a Jenkins job to fetch the <strong>Ansible Vault password</strong> securely:</li></ul>
+    <pre><code>pipeline {
+    agent any
+    environment {
+        VAULT_PASSWORD = sh(script: "aws secretsmanager get-secret-value --secret-id ansible-vault-password --query SecretString --output text", returnStdout: true).trim()
+    }
+    stages {
+        stage('Decrypt Secrets') {
+            steps {
+                sh "echo ${VAULT_PASSWORD} > .vault_pass"
+                sh "ansible-vault decrypt secrets.yml --vault-password-file .vault_pass"
+            }
+        }
+        stage('Deploy Infrastructure') {
+            steps {
+                sh "ansible-playbook -i inventory playbook.yml --vault-password-file .vault_pass"
+            }
+        }
+    }
+}</code></pre>
+    
+    <h3>4. Encrypt and Secure Jenkins Credentials</h3>
+    <p>Use Jenkins <strong>credentials store</strong> to inject secrets dynamically.</p>
+    
+    <h3>5. Automate Infrastructure Provisioning with Terraform and Ansible</h3>
+    <ul>
+      <li>Use Terraform to provision infrastructure:</li>
+    <pre><code>resource "aws_instance" "web" {
+    ami           = "ami-12345678"
+    instance_type = "t2.micro"
+    tags = {
+        Name = "SecureWebServer"
+    }
+}</code></pre>
+      <li>Integrate Terraform with Ansible Vault to fetch secrets dynamically:</li>
+        <pre><code>export ANSIBLE_VAULT_PASSWORD=$(aws secretsmanager get-secret-value --secret-id ansible-vault-password --query SecretString --output text)
+</code></pre>
+      <li>Run Ansible Playbooks after Terraform provisioning:</li>
+      <pre><code>ansible-playbook -i inventory playbook.yml --vault-password-file .vault_pass
+</code></pre>
+    </ul>
+  
+    <h3>6. Secure Secret Rotation and Compliance</h3>
+    <p>Automate <strong>secret rotation</strong> with AWS Lambda and trigger it periodically using AWS CloudWatch.</p>
+    
+    <h3>7. Monitor and Audit Security Logs</h3>
+    <ul>
+        <li>Enable <strong>AWS CloudTrail</strong> and <strong>AWS Config</strong> to monitor access logs.</li>
+        <li>Integrate <strong>Prometheus + Grafana</strong> for real-time monitoring of <strong>Ansible deployments</strong>.</li>
+    </ul>
+    
+    <h2>Expected Outcomes</h2>
+    <ul>
+        <li>✅ Secure storage and retrieval of secrets using <strong>Ansible Vault & AWS Secrets Manager</strong></li>
+        <li>✅ Automated <strong>CI/CD integration</strong> with <strong>Jenkins & Terraform</strong></li>
+        <li>✅ Secure infrastructure provisioning using <strong>Ansible & AWS</strong></li>
+        <li>✅ Continuous monitoring & compliance of secrets using <strong>AWS CloudTrail & Grafana</strong></li>
+    </ul>
+    
+    <p>This end-to-end task ensures <strong>secrets are protected</strong>, <strong>infrastructure is provisioned securely</strong>, and <strong>automation is seamless</strong>. 🚀</p>
+</body>
+</html>
 
