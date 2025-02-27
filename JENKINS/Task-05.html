@@ -1,1 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduled Builds in Jenkins using Cron Syntax</title>
+</head>
+<body>
+    <h1>Project: Scheduled Builds in Jenkins using Cron Syntax</h1>
+    
+    <h2>Project Objective</h2>
+    <p>Configure Jenkins to execute automated builds on a scheduled basis using <strong>cron syntax</strong>. The pipeline will:</p>
+    <ul>
+        <li>Fetch source code from <strong>GitHub</strong>.</li>
+        <li>Build the application using <strong>Maven</strong>.</li>
+        <li>Run <strong>SonarQube</strong> for static code analysis.</li>
+        <li>Package the application using <strong>Docker</strong>.</li>
+        <li>Push the Docker image to <strong>Docker Hub</strong>.</li>
+        <li>Deploy the application to <strong>AWS ECS (Elastic Container Service)</strong>.</li>
+        <li>Send <strong>Slack notifications</strong> upon build completion.</li>
+    </ul>
+    
+    <h2>Technology Stack</h2>
+    <ul>
+        <li><strong>Jenkins</strong>: CI/CD automation</li>
+        <li><strong>GitHub</strong>: Source code repository</li>
+        <li><strong>Maven</strong>: Build automation tool</li>
+        <li><strong>SonarQube</strong>: Code quality analysis</li>
+        <li><strong>Docker</strong>: Containerization</li>
+        <li><strong>Docker Hub</strong>: Image repository</li>
+        <li><strong>AWS ECS</strong>: Deployment environment</li>
+        <li><strong>Slack</strong>: Notifications</li>
+    </ul>
+    
+    <h2>Implementation Steps</h2>
+    
+    <h3>Step 1: Set Up Jenkins</h3>
+    <ol>
+        <li>Install Jenkins on an AWS EC2 instance or on-premise.</li>
+        <li>Install the following Jenkins plugins:
+            <ul>
+                <li><strong>Pipeline</strong></li>
+                <li><strong>Git</strong></li>
+                <li><strong>SonarQube Scanner</strong></li>
+                <li><strong>Docker Pipeline</strong></li>
+                <li><strong>Slack Notification</strong></li>
+            </ul>
+        </li>
+    </ol>
+    
+    <h3>Step 2: Configure GitHub Repository</h3>
+    <ol>
+        <li>Create a GitHub repository for the application.</li>
+        <li>Push the application code along with a <strong>Jenkinsfile</strong> defining the pipeline.</li>
+    </ol>
+    
+    <h3>Step 3: Create Jenkins Pipeline with Scheduled Builds</h3>
+    <ol>
+        <li>Navigate to <strong>Jenkins Dashboard → New Item</strong> → Select <strong>Pipeline</strong>.</li>
+        <li>Add the <strong>GitHub repository</strong> as the source code.</li>
+        <li>In the <strong>Build Triggers</strong> section, enable <strong>"Build periodically"</strong> and define the cron syntax.</li>
+    </ol>
+    <h4>Example cron expressions:</h4>
+    <ul>
+        <li><strong>Daily at midnight</strong>: <code>H 0 * * *</code></li>
+        <li><strong>Every Monday at 8 AM</strong>: <code>H 8 * * 1</code></li>
+        <li><strong>Every 6 hours</strong>: <code>H */6 * * *</code></li>
+    </ul>
+    
+    <h3>Step 4: Write the Jenkinsfile</h3>
+    <p>Below is the Jenkinsfile to automate the build, test, and deployment process:</p>
+    <pre><code>pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = 'your-dockerhub-username/app'
+        AWS_REGION = 'us-east-1'
+    }
+
+    triggers {
+        cron('H 0 * * *') // Runs every midnight
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-repo.git'
+            }
+        }
+
+        stage('Code Quality Check') {
+            steps {
+                script {
+                    sh 'mvn sonar:sonar -Dsonar.host.url=http://sonarqube-server:9000'
+                }
+            }
+        }
+
+        stage('Build Application') {
+            steps {
+                script {
+                    sh 'mvn clean package -DskipTests'
+                }
+            }
+        }
+
+        stage('Build & Push Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t $IMAGE_NAME .'
+                    sh 'docker login -u your-dockerhub-username -p your-dockerhub-password'
+                    sh 'docker push $IMAGE_NAME'
+                }
+            }
+        }
+
+        stage('Deploy to AWS ECS') {
+            steps {
+                script {
+                    sh 'aws ecs update-service --cluster your-cluster --service your-service --force-new-deployment --region $AWS_REGION'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            slackSend channel: '#devops-alerts', message: "Build Successful: ${env.JOB_NAME} - ${env.BUILD_NUMBER}"
+        }
+        failure {
+            slackSend channel: '#devops-alerts', message: "Build Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}"
+        }
+    }
+}</code></pre>
+    
+    <h3>Step 5: Configure AWS ECS for Deployment</h3>
+    <ol>
+        <li>Create an <strong>ECS Cluster</strong> with <strong>Fargate</strong>.</li>
+        <li>Define a <strong>Task Definition</strong> that pulls the <strong>Docker image</strong> from <strong>Docker Hub</strong>.</li>
+        <li>Set up an <strong>ECS Service</strong> that runs the application container.</li>
+        <li>Allow Jenkins to update ECS using <strong>IAM roles</strong>.</li>
+    </ol>
+    
+    <h3>Step 6: Run and Monitor Scheduled Builds</h3>
+    <ol>
+        <li>The Jenkins job will run automatically <strong>based on the configured cron schedule</strong>.</li>
+        <li>Monitor build logs and results in <strong>Jenkins Console Output</strong>.</li>
+        <li>Check <strong>Slack notifications</strong> for build status updates.</li>
+    </ol>
+    
+    <h2>Outcome</h2>
+    <ul>
+        <li>The pipeline runs <strong>automated builds on a schedule</strong> (daily or weekly).</li>
+        <li>The <strong>Dockerized application</strong> is deployed on <strong>AWS ECS</strong>.</li>
+        <li>Developers receive <strong>Slack notifications</strong> on build status.</li>
+    </ul>
+    
+    <p>This project ensures continuous integration and automated deployment using Jenkins scheduled builds, Docker, and AWS services.</p>
+</body>
+</html>
 
