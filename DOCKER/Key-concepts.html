@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Overview & Key Concepts</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1, h2, h3 { color: #2c3e50; text-align: left; }
+        ul { margin-left: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .section { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Key Concepts in Docker</h1>
+        <ol>
+            <h3>1. Containers</h3>
+            <ul>
+                <li>Docker containers encapsulate applications and their dependencies, providing a lightweight, portable runtime environment.</li>
+                <li>Containers share the host OS kernel but run in isolated environments.</li>
+            </ul>
+            
+            <h3>2. Images</h3>
+            <ul>
+                <li>Docker images are the blueprint for containers, containing the application, libraries, and dependencies.</li>
+                <li>Images are immutable and built using Dockerfiles.</li>
+            </ul>
+            
+            <h3>3. Dockerfile</h3>
+            <ul>
+                <li>A Dockerfile is a script that contains instructions to build a Docker image.</li>
+                <li>Defines base images, dependencies, environment variables, and application commands.</li>
+            </ul>
+            
+            <h3>4. Registries</h3>
+            <ul>
+                <li>Docker images are stored in registries like Docker Hub, AWS ECR, or private repositories.</li>
+                <li>Enables easy sharing and versioning of images.</li>
+            </ul>
+            
+            <h3>5. Volumes</h3>
+            <ul>
+                <li>Persistent storage for Docker containers to retain data across restarts.</li>
+                <li>Used for databases, logs, and configuration files.</li>
+            </ul>
+            
+            <h3>6. Networking</h3>
+            <ul>
+                <li>Docker provides multiple networking options: bridge, host, overlay, and macvlan.</li>
+                <li>Facilitates communication between containers and external networks.</li>
+            </ul>
+            
+            <h3>7. Docker Compose</h3>
+            <ul>
+                <li>Defines multi-container applications using a YAML configuration file.</li>
+                <li>Allows easy orchestration and management of complex services.</li>
+            </ul>
+            
+            <h3>8. Docker Swarm</h3>
+            <ul>
+                <li>A native clustering and orchestration solution for Docker.</li>
+                <li>Enables scaling, load balancing, and high availability.</li>
+            </ul>
+            
+            <h3>9. Kubernetes</h3>
+            <ul>
+                <li>An open-source container orchestration system for managing large-scale applications.</li>
+                <li>Provides advanced features like auto-scaling, self-healing, and rolling updates.</li>
+            </ul>
+            
+            <h3>10. Security Best Practices</h3>
+            <ul>
+                <li>Use minimal base images to reduce attack surfaces.</li>
+                <li>Regularly update images and scan for vulnerabilities.</li>
+                <li>Limit container privileges and enforce least privilege principles.</li>
+            </ul>
+        </ol>
+    </div>
+</body>
+</html>
