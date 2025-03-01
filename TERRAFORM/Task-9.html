@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy Kubernetes Cluster on AWS EKS Using Terraform</title>
+</head>
+<body>
+    <h1> Deploy Kubernetes Cluster on AWS EKS Using Terraform</h1>
+    
+    <h2>Objective</h2>
+    <p>The goal of this task is to provision an AWS EKS (Elastic Kubernetes Service) cluster using Terraform, integrate IAM roles for service accounts, and deploy a sample application.</p>
+    
+    <h2>Architecture</h2>
+    <h3>AWS Services Used:</h3>
+    <ul>
+        <li><b>EKS (Elastic Kubernetes Service)</b> – Managed Kubernetes control plane.</li>
+        <li><b>VPC</b> – Custom VPC with public and private subnets.</li>
+        <li><b>IAM Roles and Policies</b> – IAM role for EKS, IAM OIDC provider, and IAM roles for service accounts.</li>
+        <li><b>EC2 Instances</b> – Worker nodes in a private subnet (managed node group).</li>
+        <li><b>ALB (Application Load Balancer)</b> – External access to the application.</li>
+        <li><b>EBS (Elastic Block Store)</b> – Persistent storage for applications.</li>
+        <li><b>Route 53</b> – Optional, for DNS resolution.</li>
+        <li><b>Terraform</b> – Infrastructure as Code (IaC) tool for provisioning.</li>
+        <li><b>Helm</b> – Used to deploy Kubernetes resources.</li>
+        <li><b>CloudWatch</b> – For monitoring cluster and application logs.</li>
+    </ul>
+    
+    <h2>Project Implementation Steps</h2>
+    <h3>Step 1: Prerequisites</h3>
+    <ul>
+        <li>AWS CLI installed and configured (<code>aws configure</code>)</li>
+        <li>Terraform installed (<code>terraform -v</code>)</li>
+        <li>Kubectl installed (<code>kubectl version</code>)</li>
+        <li>Helm installed (<code>helm version</code>)</li>
+    </ul>
+    
+    <h3>Step 2: Create a Terraform Project Directory</h3>
+    <pre><code>mkdir eks-terraform &amp;&amp; cd eks-terraform</code></pre>
+    <p>Create the following Terraform files:</p>
+    <ul>
+        <li><b>variables.tf</b> – Stores variables</li>
+        <li><b>provider.tf</b> – AWS provider configuration</li>
+        <li><b>vpc.tf</b> – VPC creation</li>
+        <li><b>eks.tf</b> – EKS cluster and worker nodes</li>
+        <li><b>iam.tf</b> – IAM role for service accounts</li>
+        <li><b>outputs.tf</b> – Outputs EKS cluster details</li>
+    </ul>
+    
+    <h3>Step 3: Define Terraform Variables (variables.tf)</h3>
+    <pre><code>variable "region" {
+  default = "us-east-1"
+}
+
+variable "cluster_name" {
+  default = "eks-cluster"
+}
+
+variable "vpc_cidr" {
+  default = "10.0.0.0/16"
+}
+
+variable "subnet_cidrs" {
+  type    = list(string)
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+}</code></pre>
+    
+    <h3>Step 4: Configure AWS Provider (provider.tf)</h3>
+    <pre><code>provider "aws" {
+  region = var.region
+}</code></pre>
+    
+    <h3>Step 5: Create VPC and Subnets (vpc.tf)</h3>
+    <pre><code>resource "aws_vpc" "eks_vpc" {
+  cidr_block = var.vpc_cidr
+  enable_dns_support = true
+  enable_dns_hostnames = true
+  tags = {
+    Name = "eks-vpc"
+  }
+}
+
+resource "aws_subnet" "eks_subnet" {
+  count = length(var.subnet_cidrs)
+  vpc_id = aws_vpc.eks_vpc.id
+  cidr_block = var.subnet_cidrs[count.index]
+  map_public_ip_on_launch = false
+  availability_zone = element(["us-east-1a", "us-east-1b"], count.index)
+  tags = {
+    Name = "eks-subnet-${count.index}"
+  }
+}</code></pre>
+    
+    <h3>Step 6: Deploy EKS Cluster (eks.tf)</h3>
+    <pre><code>resource "aws_eks_cluster" "eks" {
+  name     = var.cluster_name
+  role_arn = aws_iam_role.eks_role.arn
+  
+  vpc_config {
+    subnet_ids = aws_subnet.eks_subnet[*].id
+  }
+  
+  depends_on = [aws_iam_role.eks_role]
+}</code></pre>
+    
+    <h3>Step 7: IAM Role for EKS (iam.tf)</h3>
+    <pre><code>resource "aws_iam_role" "eks_role" {
+  name = "eksClusterRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = {
+        Service = "eks.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "eks_policy" {
+  role       = aws_iam_role.eks_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+}
+</code></pre>
+    
+    <h3>Step 8: Create an IAM Role for Service Accounts</h3>
+    <pre><code>resource "aws_iam_openid_connect_provider" "eks_oidc" {
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
+  url             = aws_eks_cluster.eks.identity[0].oidc[0].issuer
+}
+
+resource "aws_iam_role" "app_role" {
+  name = "app-service-account-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRoleWithWebIdentity"
+      Effect = "Allow"
+      Principal = {
+        Federated = aws_iam_openid_connect_provider.eks_oidc.arn
+      }
+      Condition = {
+        StringEquals = {
+          "oidc.eks.us-east-1.amazonaws.com/id/${aws_eks_cluster.eks.identity[0].oidc[0].issuer}:sub" = "system:serviceaccount:default:app-service-account"
+        }
+      }
+    }]
+  })
+}
+</code></pre>
+    
+    <h3>Step 9: Apply Terraform Configuration</h3>
+    <pre><code>terraform init
+terraform apply -auto-approve
+</code></pre>
+    <p>Once applied, Terraform provisions the EKS cluster and IAM roles</p>
+    
+    <h3>Step 10: Configure Kubectl for EKS</h3>
+    <pre><code>aws eks update-kubeconfig --name eks-cluster --region us-east-1
+kubectl get nodes
+</code></pre>
+    
+    <h3>Step 11: Deploy a Sample Application</h3>
+    <pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-app
+  labels:
+    app: sample-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-app
+  template:
+    metadata:
+      labels:
+        app: sample-app
+    spec:
+      serviceAccountName: app-service-account
+      containers:
+      - name: sample-app
+        image: nginx
+        ports:
+        - containerPort: 80
+</code></pre>
+      <h4>Create a Service for Load Balancer</h4>
+      <pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: sample-app-service
+spec:
+  selector:
+    app: sample-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+</code></pre>
+    <p>Apply the deployment:</p>
+    <pre><code>kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+</code></pre>
+    <h3>Step 12: Verify the Application</h3>
+    <p>Get the external URL:</p>
+    <pre><code>kubectl get svc sample-app-service
+</code></pre>
+  
+    <h2>Conclusion</h2>
+    <p>This project automates AWS EKS cluster creation using Terraform, integrates IAM roles for Kubernetes service accounts, and deploys a sample Nginx application behind a LoadBalancer service.</p>
+    <p>This setup is a solid foundation for deploying microservices on AWS EKS using Terraform and Helm.</p>
+</body>
+</html>
