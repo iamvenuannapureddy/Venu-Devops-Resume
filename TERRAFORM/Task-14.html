@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Module Creation and Publishing on Terraform Registry</title>
+</head>
+<body>
+    <h1> Dynamic Module Creation and Publishing on Terraform Registry</h1>
+    
+    <h2>Objective</h2>
+    <p>The goal of this task is to <strong>design, develop, and publish reusable Terraform modules</strong> for <strong>VPC, EC2, and RDS</strong> 
+      that can be used across multiple AWS environments. These modules will be published to the <strong>Terraform Registry</strong> to 
+      ensure easy sharing and versioning.</p>
+    
+    <h2>Technologies Used</h2>
+    <ul>
+        <li><strong>Terraform</strong> (Infrastructure as Code)</li>
+        <li><strong>AWS Services:</strong> VPC, EC2, RDS</li>
+        <li><strong>Git & GitHub/GitLab/Bitbucket</strong> (Version Control & CI/CD)</li>
+        <li><strong>Terraform Cloud/Terraform Registry</strong> (Publishing Modules)</li>
+        <li><strong>AWS IAM, Security Groups, S3</strong> (Permissions & Storage)</li>
+    </ul>
+    
+    <h2>Task Implementation Steps</h2>
+    <h3>Phase 1: Designing Terraform Modules</h3>
+    <p>We will create three separate Terraform modules:</p>
+    <ol>
+        <li><strong>VPC Module</strong></li>
+        <li><strong>EC2 Module</strong></li>
+        <li><strong>RDS Module</strong></li>
+    </ol>
+    <p>Each module will be self-contained, reusable, and parameterized.</p>
+    
+    <h3>Phase 2: Implementing the Modules</h3>
+    <h4>1. VPC Module</h4>
+    <p><strong>Features:</strong></p>
+    <ul>
+        <li>Create a <strong>custom VPC</strong> with CIDR block as an input variable.</li>
+        <li>Define <strong>public and private subnets</strong> dynamically.</li>
+        <li>Set up an <strong>Internet Gateway (IGW)</strong> for public subnets.</li>
+        <li>Define <strong>Route Tables and Associations</strong>.</li>
+        <li>Implement <strong>NAT Gateway</strong> for private subnets.</li>
+    </ul>
+    <p><strong>Files:</strong></p>
+    <ul>
+      <li>variables.tf (Define input variables like CIDR, subnet count, region)</li>
+      <li>main.tf (VPC resource creation)</li>
+      <li>outputs.tf (VPC ID, Subnet IDs, Route Table IDs)</li>
+    </ul>
+    <h4>2. EC2 Module</h4>
+    <p><strong>Features:</strong></p>
+    <ul>
+        <li>Create <strong>EC2 instances</strong> with configurable instance types.</li>
+        <li>Attach an <strong>Elastic IP (EIP)</strong> to public instances.</li>
+        <li>Define <strong>IAM Role & Instance Profile</strong>.</li>
+        <li>Allow dynamic <strong>Security Group (SG) rules</strong>.</li>
+    </ul>
+    <p><strong>Files:</strong></p>
+    <ul>
+      <li><b>variables.tf</b> (AMI, instance type, key pair, SG rules)</li>
+      <li><b>main.tf</b> (EC2, EBS Volume, IAM Role)</li>
+      <li><b>outputs.tf</b> (Instance ID, Public/Private IP)</li>
+    </ul>
+    
+    <h4>3. RDS Module</h4>
+    <p><strong>Features:</strong></p>
+    <ul>
+        <li>Create an <strong>RDS Instance (PostgreSQL/MySQL)</strong>.</li>
+        <li>Define <strong>DB Subnet Groups</strong> in private subnets.</li>
+        <li>Enable <strong>multi-AZ deployment</strong> for high availability.</li>
+        <li>Configure <strong>parameter groups & security groups</strong>.</li>
+    </ul>
+    <p><strong>Files:</strong></p>
+    <ul>
+      <li>variables.tf (DB type, username, password, storage)</li>
+      <li>main.tf (RDS resource creation)</li>
+      <li>outputs.tf (DB endpoint, DB name)</li>
+    </ul>
+    
+    <h3>Phase 3: Testing and Publishing</h3>
+    <h4>1. Version Control & GitHub Setup</h4>
+    <ul>
+      <li>Create a <strong>GitHub repository</strong> for each module (terraform-aws-vpc, terraform-aws-ec2, terraform-aws-rds).</li>
+      <li>Maintain a <strong>structured module directory:</strong></li>
+      <pre>
+/terraform-aws-vpc/
+    ├── main.tf
+    ├── variables.tf
+    ├── outputs.tf
+    ├── README.md
+    </pre>
+      <li>Use <strong>branching strategy</strong> (main, dev, feature-branch).</li>
+    </ul>
+    
+    <h4>2. Terraform Cloud Testing</h4>
+    <ul>
+      <li>Test each module <strong>individually</strong> by calling them in a separate Terraform root module.</li>
+      <li>Execute terraform apply to validate module functionality.</li>
+    </ul>
+    
+    <h4>3. Publishing to Terraform Registry</h4>
+    <ul>
+      <li>Ensure README.md is well-documented with <strong>inputs, outputs, examples.</strong></li>
+      <li>Add a <strong>semantic version tag </strong>(v1.0.0).</li>
+      <li>Push to <strong>GitHub</strong> and link with Terraform Registry.</li>
+    </ul>
+
+    <h4>Commands for Publishing:</h4>
+    <ol>
+      <li><strong>Tag and push version</strong></li>
+      <pre><code>git tag v1.0.0
+git push origin v1.0.0
+</code></pre>
+      <li><strong>Verify in Terraform Registry</strong>
+        <ul>
+          <li>Log in to Terraform Registry</li>
+          <li>Navigate to "Publish a Module"</li>
+          <li>Link the GitHub repository</li>
+        </ul>
+      </li>
+    </ol>
+    
+    <h3>Phase 4: Usage Example</h3>
+    <p>To use the modules, create a Terraform configuration:</p>
+    <pre>
+module "vpc" {
+  source  = "github.com/user/terraform-aws-vpc"
+  vpc_cidr = "10.0.0.0/16"
+}
+
+module "ec2" {
+  source      = "github.com/user/terraform-aws-ec2"
+  instance_type = "t3.micro"
+  vpc_id      = module.vpc.vpc_id
+}
+
+module "rds" {
+  source  = "github.com/user/terraform-aws-rds"
+  db_name = "mydatabase"
+  vpc_id  = module.vpc.vpc_id
+}
+    </pre>
+    
+    <h2>Project Deliverables</h2>
+    <ul>
+        <li>✅ <strong>Terraform Modules for VPC, EC2, and RDS</strong></li>
+        <li>✅ <strong>GitHub Repository with Structured Code & README</strong></li>
+        <li>✅ <strong>Terraform Registry Published Modules</strong></li>
+        <li>✅ <strong>Version Control for Continuous Improvement</strong></li>
+    </ul>
+    
+    <h2>Next Steps</h2>
+    <ul>
+        <li>Implement <strong>CI/CD pipelines</strong> for automated testing of Terraform modules.</li>
+        <li>Enhance <strong>observability</strong> using <strong>CloudWatch</strong> and <strong>Terraform state management</strong>.</li>
+        <li>Extend modules to support <strong>multi-region deployments</strong>.</li>
+    </ul>
+    
+    <p>This end-to-end guide is <strong>ready for implementation</strong>. Let me know if you need additional details on any step! 🚀</p>
+</body>
+</html>
