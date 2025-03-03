@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End CI/CD Pipeline for Terraform Deployment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1> CI/CD Pipeline for Terraform Deployment</h1>
+    
+    <h2>Task Goal</h2>
+    <p>Automate <strong>Terraform infrastructure deployment</strong> using a robust CI/CD pipeline with <strong>Jenkins, GitHub Actions, or GitLab CI</strong>. Ensure all infrastructure changes are version-controlled, reviewed via pull requests (PRs), and deployed automatically.</p>
+    
+    <h2>Architecture Overview</h2>
+    <h3>1. Tools and Technologies</h3>
+    <ul>
+        <li><strong>Version Control</strong>: GitHub / GitLab</li>
+        <li><strong>CI/CD Orchestration</strong>: Jenkins, GitHub Actions, or GitLab CI</li>
+        <li><strong>Infrastructure as Code (IaC)</strong>: Terraform</li>
+        <li><strong>Cloud Provider</strong>: AWS (Alternatively Azure/GCP)</li>
+        <li><strong>State Management</strong>: Terraform Cloud / S3 + DynamoDB</li>
+        <li><strong>Secrets Management</strong>: AWS Secrets Manager / HashiCorp Vault</li>
+        <li><strong>Monitoring & Logging</strong>: AWS CloudWatch, Prometheus, Grafana</li>
+    </ul>
+    
+    <h2>Task Workflow</h2>
+    <h3>1. Infrastructure as Code (IaC) Setup</h3>
+    <ul>
+        <li>Define Terraform configurations to <strong>provision AWS resources</strong> (e.g., EC2, VPC, RDS, ALB).</li>
+        <li>Store Terraform state in <strong>AWS S3 (with DynamoDB locking) or Terraform Cloud</strong>.</li>
+        <li>Use Terraform modules for <strong>reusability and standardization</strong>.</li>
+    </ul>
+    
+    <h3>2. Version Control & PR Workflow</h3>
+    <ul>
+        <li>Developers create a <strong>feature branch</strong> to modify Terraform code.</li>
+        <li>Submit a <strong>pull request (PR)</strong> for review.</li>
+        <li>GitHub/GitLab enforces a <strong>pre-merge validation check</strong>:</li>
+        <ul>
+            <li>Terraform <strong>formatting check</strong> (<code>terraform fmt</code>)</li>
+            <li>Terraform <strong>validation</strong> (<code>terraform validate</code>)</li>
+            <li>Terraform <strong>plan</strong> to preview changes (<code>terraform plan</code>).</li>
+        </ul>
+        <li>After approval, merge PR into <code>main</code> branch.</li>
+    </ul>
+    
+    <h3>3. CI/CD Pipeline Automation</h3>
+    <h4>Pipeline Triggers</h4>
+    <ul>
+        <li><strong>Pre-Merge (PR checks)</strong>: Run <code>terraform fmt</code>, <code>terraform validate</code>, and <code>terraform plan</code>.</li>
+        <li><strong>Post-Merge (Deployment)</strong>: Apply infrastructure changes <strong>automatically</strong>.</li>
+    </ul>
+    
+    <h4>Jenkins Pipeline (Alternative: GitHub Actions/GitLab CI)</h4>
+    <ul>
+        <li><strong>Trigger</strong>: Push to <code>main</code> branch</li>
+        <li><strong>Stages</strong>:</li>
+        <ol>
+            <li><strong>Checkout Code</strong> (from GitHub/GitLab)</li>
+            <li><strong>Lint & Validate</strong> (<code>terraform fmt</code>, <code>terraform validate</code>)</li>
+            <li><strong>Plan Deployment</strong> (<code>terraform plan</code>)</li>
+            <li><strong>Manual Approval</strong> (if needed for critical changes)</li>
+            <li><strong>Apply Changes</strong> (<code>terraform apply</code>)</li>
+        </ol>
+    </ul>
+    
+    <h2>Implementation Steps</h2>
+    <h3>Step 1: Set Up Terraform Code Repository</h3>
+    <ol>
+        <li><strong>Initialize a GitHub/GitLab repo</strong> for Terraform configurations.</li>
+        <li><strong>Define Terraform modules</strong>:</li>
+        <ul>
+            <li>VPC module</li>
+            <li>EC2 instance module</li>
+            <li>RDS module</li>
+        </ul>
+        <li>Store Terraform <strong>backend configuration</strong> in S3/Terraform Cloud.</li>
+    </ol>
+    <h3>Step 2: Configure CI/CD Pipeline</h3>
+    <h4>For Jenkins</h4>
+    <ol>
+      <li>Install Jenkins plugins: Pipeline, GitHub Branch Source, Terraform.</li>
+      <li>Create a <b>>Jenkinsfile:</b</li>
+      <pre><code>pipeline {
+    agent any
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-key')
+    }
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git 'https://github.com/org/repo.git'
+            }
+        }
+        stage('Terraform Init') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+        stage('Terraform Validate') {
+            steps {
+                sh 'terraform validate'
+            }
+        }
+        stage('Terraform Plan') {
+            steps {
+                sh 'terraform plan'
+            }
+        }
+        stage('Terraform Apply') {
+            when {
+                branch 'main'
+            }
+            steps {
+                sh 'terraform apply -auto-approve'
+            }
+        }
+    }
+}
+</code></pre>
+      
+    </ol>
+
+    <h4>For GitHub Actions</h4>
+    <p>Create <b>.github/workflows/terraform.yml:</b></p>
+    <pre><code>name: Terraform Deployment
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve
+</code></pre>
+
+    <h4>For GitLab CI</h4>
+    <p>Add <b>.gitlab-ci.yml:</b></p>
+    <pre><code>stages:
+  - validate
+  - plan
+  - apply
+
+variables:
+  TF_IN_AUTOMATION: "true"
+
+validate:
+  stage: validate
+  script:
+    - terraform init
+    - terraform validate
+  only:
+    - merge_requests
+
+plan:
+  stage: plan
+  script:
+    - terraform plan
+  only:
+    - merge_requests
+
+apply:
+  stage: apply
+  script:
+    - terraform apply -auto-approve
+  only:
+    - main
+</code></pre>
+
+    <h3>Step 3: Secure Terraform State & Credentials</h3>
+    <ul>
+      <li>Use AWS S3 + DynamoDB for remote state management.</li>
+      <li>Store AWS credentials in Jenkins credentials store / GitHub Secrets / GitLab CI Variables.</li>
+      <li>Use Terraform Cloud for managing state & locking.</li>
+    </ul>
+
+    <h3>Step 4: Monitoring & Logging</h3>
+    <ul>
+      <li>Configure AWS CloudWatch for infrastructure logs.</li>
+      <li>Use Prometheus & Grafana for observability.</li>
+      <li>Enable Terraform logs for debugging.</li>
+    </ul>
+
+    <h3>Step 5: Testing and Deployment</h3>
+    <ol>
+      <li><strong>Push changes</strong> to a feature branch → Create PR.</li>
+      <li><strong>Pipeline runs Terraform validation & plan.</strong></li>
+      <li><strong>Review PR, approve, and merge.</strong></li>
+      <li><strong>CI/CD triggers Terraform apply</strong> in main.</li>
+    </ol>
+    <h2>Expected Outcomes</h2>
+    <ul>
+        <li>✅ Fully automated <strong>Terraform deployment</strong> process</li>
+        <li>✅ <strong>Pull request-based change management</strong></li>
+        <li>✅ <strong>Pre-merge validation</strong> for infrastructure changes</li>
+        <li>✅ <strong>Secure state management</strong> with <strong>S3, Terraform Cloud, or Vault</strong></li>
+        <li>✅ <strong>CI/CD integration</strong> with <strong>Jenkins, GitHub Actions, or GitLab CI</strong></li>
+    </ul>
+    
+    <h2>Next Steps</h2>
+    <ul>
+        <li>🔹 Extend Terraform modules (e.g., S3, EKS, Lambda, IAM).</li>
+        <li>🔹 Add security scanning (Checkov, TFSEC).</li>
+        <li>🔹 Implement rollback strategy (Terraform state versioning).</li>
+    </ul>
+</body>
+</html>
