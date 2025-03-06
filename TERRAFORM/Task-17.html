@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Monitoring Setup with AWS CloudWatch & Datadog using Terraform</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; padding: 20px; }
+        h1, h2, h3 { color: #333; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        ul { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Project: End-to-End Monitoring Setup with AWS CloudWatch & Datadog using Terraform</h1>
+    
+    <h2>Objective:</h2>
+    <p>The goal of this project is to set up a comprehensive monitoring solution for an AWS infrastructure using <strong>Amazon CloudWatch</strong> and
+      <strong>Datadog</strong>, while automating the deployment of alarms, dashboards, and monitoring configurations using <strong>Terraform</strong>.</p>
+    
+    <h2>Technology Stack:</h2>
+    <ul>
+        <li><strong>Cloud Provider:</strong> AWS</li>
+        <li><strong>Monitoring Tools:</strong> AWS CloudWatch, Datadog</li>
+        <li><strong>Infrastructure as Code (IaC):</strong> Terraform</li>
+        <li><strong>Scripting:</strong> Shell/Python (for automation)</li>
+        <li><strong>CI/CD Tools (Optional):</strong> Jenkins/GitHub Actions</li>
+        <li><strong>Alerting Tools:</strong> SNS (for CloudWatch Alarms), Slack/Webhooks (for Datadog)</li>
+    </ul>
+    
+    <h2>Project Implementation Steps</h2>
+    
+    <h3>1. Infrastructure Setup</h3>
+    <ul>
+        <li>Ensure that AWS infrastructure (EC2, RDS, Load Balancer, etc.) is already provisioned.</li>
+        <li>Enable VPC Flow Logs, S3 logs, and other relevant logs for monitoring.</li>
+    </ul>
+    
+    <h3>2. CloudWatch Monitoring Setup using Terraform</h3>
+    <ul>
+      <li>Enable CloudWatch Metrics Collection
+        <ul>
+          <li>Configure CloudWatch agent on EC2 instances to collect CPU, memory, disk, and network usage.</li>
+          <li>Enable AWS service-specific metrics (e.g., RDS, ALB, Lambda).</li>
+          <li>Enable AWS X-Ray for tracing requests.</li>
+        </ul>
+      </li>
+    </ul>
+    <ul>
+      <li>Create CloudWatch Alarms
+        <ul>
+          <li>Define Terraform modules for CloudWatch alarms based on CPU, memory, and disk utilization.</li>
+          <li>Set up anomaly detection for unusual spikes in traffic.</li>
+          <li>Trigger AWS SNS notifications for alerts.</li>
+        </ul>
+      </li>
+    </ul>
+    <ul>
+      <li>Create CloudWatch Dashboards
+        <ul>
+          <li>Use Terraform to define custom dashboards for:
+            <ul>
+              <li>EC2 instances (CPU, memory, disk)</li>
+              <li>RDS (connections, CPU utilization, free storage)</li>
+              <li>ALB (request count, latency, 5xx errors)</li>
+            </ul>
+          </li>
+          <li>Group dashboards per environment (Dev, Staging, Production).</li>
+        </ul>
+      </li>
+    </ul>
+    
+    <h3>3. Datadog Monitoring Setup using Terraform</h3>
+    <ul>
+        <li>Integrate AWS with Datadog
+          <ul>
+            <li>Configure AWS IAM permissions for Datadog.</li>
+            <li>Set up Terraform modules for Datadog AWS integration.</li>
+          </ul>
+        </li>
+        <li>Enable Datadog Agent on EC2
+          <ul>
+            <li>Deploy the Datadog agent via Terraform user-data scripts.</li>
+            <li>Configure log forwarding from CloudWatch to Datadog.</li>
+          </ul>
+        </li>
+        <li>Define Datadog Monitors & Alerts</li>
+          <ul>
+            <li>Create monitors for:
+              <ul>
+                <li>EC2 health (CPU, Memory, Disk)</li>
+                <li>RDS database health</li>
+                <li>API response times</li>
+              </ul>
+            </li>
+            <li>Configure alert thresholds and notification channels (Slack, PagerDuty, Webhooks).</li>
+          </ul>
+        <li>Create Datadog Dashboards
+          <ul>
+            <li>Use Terraform to define JSON-based dashboard templates.</li>
+            <li>Set up environment-based dashboards (e.g., Dev, QA, Production).</li>
+            <li>Include service health and performance graphs.</li>
+          </ul>
+        </li>
+    </ul>
+    
+    <h3>4. Automation and CI/CD Integration</h3>
+    <ul>
+        <li>Automate Monitoring Setup with Terraform
+          <ul>
+            <li>Define reusable Terraform modules for CloudWatch and Datadog.</li>
+            <li>Store Terraform state remotely in <strong>>S3 with DynamoDB locking.</strong</li>
+          </ul>
+        </li>
+        <li>Integrate with Jenkins/GitHub Actions
+          <ul>
+            <li>Automate Terraform deployments via a CI/CD pipeline.</li>
+            <li>Implement Terraform plan/apply stages with approval for production changes..</li>
+          </ul>
+        </li>
+        <li>Configure Log Forwarding
+          <ul>
+            <li>Stream CloudWatch logs to <strong>Datadog</strong> for unified visibility.</li>
+            <li>Set up AWS Lambda for custom log ingestion.</li>
+          </ul>
+        </li>
+          
+    </ul>
+    
+    <h3>5. Security & Compliance</h3>
+    <ul>
+        <li>Implement IAM Roles & Policies
+          <ul>
+            <li>Restrict access to monitoring tools with IAM policies.</li>
+            <li>Enforce least privilege principle for monitoring agents.</li>
+          </ul>
+        </li>
+        <li>Enable CloudWatch Logs Insights
+          <ul>
+            <li>Configure queries for advanced log analysis.</li>
+            <li>Enable log retention policies.</li>
+          </ul>
+        </li>
+        <li>Set Up Multi-Region Monitoring
+          <ul>
+            <li>Ensure CloudWatch and Datadog cover all AWS regions in use.</li>
+          </ul>
+        </li>
+    </ul>
+    
+    <h3>6. Testing & Validation</h3>
+    <ul>
+        <li>Simulate Load and Check Alerts
+          <ul>
+            <li>Use stress testing tools (Apache JMeter, Locust) to trigger alerts.</li>
+            <li>Verify that notifications are sent correctly.</li>
+          </ul>
+        </li>
+        <li>Monitor Terraform Deployment
+          <ul>
+            <li>Check Terraform state and ensure resources are correctly applied.</li>     
+          </ul>
+        </li>
+    </ul>
+    
+    <h3>7. Documentation & Handover</h3>
+    <ul>
+        <li>Create README Documentation
+          <ul>
+            <li>Explain Terraform module usage.</li>
+            <li>Provide troubleshooting steps.</li>
+          </ul>
+        </li>
+        <li>Knowledge Transfer
+          <ul>
+            <li>Conduct a knowledge-sharing session for the operations team.</li>
+          </ul>
+        </li>
+    </ul>
+
+    <h2>Terraform Code for CloudWatch & Datadog Monitoring</h2>
+    <p>I'll break it into multiple modules:</p>
+    <ol>
+      <li>CloudWatch Agent & Log Group Setup</li>
+      <li>CloudWatch Alarms & Dashboards</li>
+      <li>Datadog AWS Integration</li>
+      <li>Datadog Monitors & Dashboards</li>
+      <li>CI/CD Pipeline Integration (Optional)</li>
+    </ol>
+
+    <h2>1️⃣ CloudWatch Agent & Log Group Setup</h2>
+    <p>This Terraform script:</p>
+    <ul>
+      <li>Installs the CloudWatch agent on EC2 instances.</li>
+      <li>Configures CloudWatch logs for monitoring.</li>
+    </ul>
+    <h4>Terraform Code: cloudwatch-agent.tf</h4>
+    <pre><code>resource "aws_ssm_parameter" "cloudwatch_agent_config" {
+  name  = "/AmazonCloudWatch-agent-config"
+  type  = "String"
+  value = <<EOF
+{
+  "agent": {
+    "metrics_collection_interval": 60,
+    "logfile": "/var/logs/awslogs.log"
+  },
+  "metrics": {
+    "namespace": "CustomNamespace",
+    "metrics_collected": {
+      "cpu": {
+        "measurement": ["cpu_usage_idle", "cpu_usage_user"],
+        "metrics_collection_interval": 60
+      },
+      "disk": {
+        "measurement": ["used_percent"],
+        "metrics_collection_interval": 60
+      }
+    }
+  }
+}
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "cw_agent_log_group" {
+  name = "/aws/ec2/cloudwatch-agent"
+  retention_in_days = 30
+}
+</code></pre>
+
+    <h2>2️⃣ CloudWatch Alarms & Dashboards</h2>
+    <ul>
+      <li>Creates alarms for CPU, memory, and disk utilization.</li>
+      <li>Sets up SNS notifications.</li>
+    </ul>
+    <pre><code>resource "aws_sns_topic" "cloudwatch_alerts" {
+  name = "cloudwatch-alerts"
+}
+
+resource "aws_cloudwatch_metric_alarm" "cpu_high" {
+  alarm_name          = "HighCPUUsage"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 80
+  alarm_description   = "This alarm triggers when CPU usage exceeds 80%."
+  alarm_actions       = [aws_sns_topic.cloudwatch_alerts.arn]
+
+  dimensions = {
+    InstanceId = "i-1234567890abcdef0"
+  }
+}
+</code></pre>
+    <p>Terraform Code: cloudwatch-dashboard.tf</p>
+    <pre><code>resource "aws_cloudwatch_dashboard" "main_dashboard" {
+  dashboard_name = "CloudWatch-Monitoring"
+
+  dashboard_body = <<EOF
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 6,
+      "height": 3,
+      "properties": {
+        "metrics": [
+          ["AWS/EC2", "CPUUtilization", "InstanceId", "i-1234567890abcdef0"]
+        ],
+        "title": "CPU Utilization",
+        "view": "timeSeries",
+        "region": "us-east-1"
+      }
+    }
+  ]
+}
+EOF
+}
+</code></pre>
+
+    <h2>3️⃣ Datadog AWS Integration</h2>
+    <p>This Terraform script:</p>
+    <ul>
+      <li>Connects AWS services to Datadog for monitoring.</li>
+    </ul>
+    <h4>Terraform Code: datadog-aws-integration.tf</h4>
+    <pre><code>provider "datadog" {
+  api_key = var.datadog_api_key
+  app_key = var.datadog_app_key
+}
+
+resource "datadog_integration_aws" "aws_integration" {
+  account_id      = "123456789012"
+  role_name       = "DatadogIntegrationRole"
+  host_tags       = ["env:production", "service:webapp"]
+  filter_tags     = ["tag-key:tag-value"]
+  metrics_polling = true
+}
+</code></pre>
+
+    <h2>4️⃣ Datadog Monitors & Dashboards</h2>
+    <p>This Terraform script:</p>
+    <ul>
+      <li>Creates Datadog monitors for EC2 and RDS.</li>
+      <li>Sets up notifications via Slack.</li>
+    </ul>
+    <h4>Terraform Code: datadog-monitors.tf</h4>
+    <pre><code>resource "datadog_monitor" "cpu_monitor" {
+  name    = "High CPU Usage"
+  type    = "metric alert"
+  query   = "avg(last_5m):avg:aws.ec2.cpuutilization{*} > 80"
+  message = "ALERT! CPU usage exceeded 80%. Please investigate."
+  tags    = ["env:production"]
+
+  notify_no_data    = true
+  no_data_timeframe = 10
+
+  notification {
+    type = "slack"
+    channel = "#alerts"
+  }
+}
+</code></pre>
+    <h4>Terraform Code: datadog-dashboard.tf</h4>
+    <pre><code>resource "datadog_dashboard" "aws_monitoring_dashboard" {
+  title       = "AWS Monitoring"
+  description = "Monitoring Dashboard for AWS Services"
+
+  widget {
+    title = "EC2 CPU Usage"
+    definition {
+      timeseries_definition {
+        request {
+          q = "avg:aws.ec2.cpuutilization{*}"
+        }
+      }
+    }
+  }
+}
+</code></pre>
+
+    <h2>5️⃣ CI/CD Pipeline Integration (Jenkins)</h2>
+    <p>This Jenkinsfile automates Terraform deployment.</p>
+    <h4>Jenkinsfile</h4>
+    <pre><code>pipeline {
+    agent any
+    environment {
+        AWS_REGION = 'us-east-1'
+        DATADOG_API_KEY = credentials('datadog-api-key')
+        DATADOG_APP_KEY = credentials('datadog-app-key')
+    }
+    stages {
+        stage('Terraform Init') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+        stage('Terraform Plan') {
+            steps {
+                sh 'terraform plan -out=tfplan'
+            }
+        }
+        stage('Terraform Apply') {
+            steps {
+                sh 'terraform apply -auto-approve tfplan'
+            }
+        }
+    }
+}
+</code></pre>
+    <h3>Deployment Steps</h3>
+    <h4>1️⃣ Prerequisites</h4>
+    <ul>
+      <li>Install Terraform and configure AWS credentials.</li>
+      <li>Get <strong>Datadog API & APP keys.</strong></li>
+      <li>Set up <strong>Jenkins with Terraform plugins.</strong></li>
+    </ul>
+    <h4>2️⃣ Clone Repository & Initialize Terraform</h4>
+    <pre><code>git clone https://github.com/your-repo/monitoring-terraform.git
+cd monitoring-terraform
+terraform init
+</code></pre>
+    <h4>3️⃣ Run Terraform Deployment</h4>
+    <pre><code>terraform plan -out=tfplan
+terraform apply -auto-approve tfplan
+</code></pre>
+    <h4>4️⃣ Validate Monitoring Setup</h4>
+    <ul>
+      <li><strong>CloudWatch Dashboard:</strong> AWS Console → CloudWatch → Dashboards</li>
+      <li><strong>Datadog Dashboard:</strong> Datadog UI → Dashboards</li>
+      <li><strong>Alerts:</strong> Check SNS and Slack notifications.</li>
+    </ul>
+    <h2>Final Outcome</h2>
+    <ul>
+      <li>AWS CloudWatch & Datadog integrated for full-stack monitoring.</li>
+      <li>Terraform automated monitoring setup.</li>
+      <li>Alerts & dashboards configured for real-time insights.</li>
+      <li>CI/CD pipeline for automatic deployment.</li>
+    </ul>
+  
+    <h2>Deliverables:</h2>
+    <ul>
+        <li><strong>Terraform Code Repository</strong> (CloudWatch + Datadog)</li>
+        <li><strong>Automated Dashboards & Alerts</strong></li>
+        <li><strong>CI/CD Pipeline for Terraform Deployment</strong></li>
+        <li><strong>Documentation & Playbook for Monitoring Setup</strong></li>
+        <li><strong>Security & Compliance Best Practices</strong></li>
+    </ul>
+    
+    <h2>Expected Outcome</h2>
+    <ul>
+        <li>Fully automated <strong>CloudWatch & Datadog monitoring</strong> for AWS infrastructure.</li>
+        <li><strong>Proactive alerting</strong> with SNS, Slack, and PagerDuty.</li>
+        <li><strong>Centralized monitoring dashboards</strong> for real-time visibility.</li>
+        <li><strong>Automated deployment</strong> of monitoring configurations with Terraform.</li>
+        <li><strong>Scalability</strong> for adding more AWS services as needed.</li>
+    </ul>
+</body>
+</html>
