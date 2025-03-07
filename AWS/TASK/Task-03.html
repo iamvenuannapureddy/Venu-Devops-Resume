@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automating AWS Infrastructure Provisioning using Terraform & Ansible</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 5px;
+            display: block;
+            white-space: pre-wrap;
+            border-left: 4px solid #3498db;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Project: Automating AWS Infrastructure Provisioning using Terraform & Ansible</h1>
+    
+    <h2>1. Project Overview</h2>
+    <p>The goal of this project is to automate the provisioning of AWS infrastructure using <strong>Terraform</strong> and configure instances using <strong>Ansible</strong>. This will enable a <strong>scalable, repeatable, and efficient deployment</strong> process.</p>
+    
+    <h2>2. Tech Stack</h2>
+    <ul>
+        <li><strong>Cloud Provider:</strong> AWS</li>
+        <li><strong>Infrastructure as Code (IaC):</strong> Terraform</li>
+        <li><strong>Configuration Management:</strong> Ansible</li>
+        <li><strong>Compute:</strong> Amazon EC2</li>
+        <li><strong>Networking:</strong> VPC, Subnets, Security Groups</li>
+        <li><strong>Database:</strong> Amazon RDS</li>
+        <li><strong>Storage & State Management:</strong> S3 + DynamoDB for Terraform state locking</li>
+        <li><strong>Version Control:</strong> Git/GitHub</li>
+        <li><strong>CI/CD:</strong> (Optional) Jenkins for automation</li>
+    </ul>
+    
+    <h2>3. Architecture Diagram</h2>
+    <ul>
+        <li>A <strong>VPC</strong> with public and private subnets</li>
+        <li>An <strong>EC2 instance</strong> in the public subnet (for Ansible)</li>
+        <li>A <strong>Private EC2 instance</strong> (Application Server)</li>
+        <li>An <strong>RDS MySQL database</strong> in a private subnet</li>
+        <li>Security Groups for secure access</li>
+        <li>Terraform backend in <strong>S3 + DynamoDB</strong> for state management</li>
+    </ul>
+    
+    <h2>4. Implementation Plan</h2>
+    
+    <h3>Step 1: Setup Terraform for Infrastructure Provisioning</h3>
+    <ol>
+        <li><strong>Install Terraform</strong> on your local machine or CI/CD pipeline.</li>
+        <li><strong>Define Terraform provider</strong> (AWS) in a <code>provider.tf</code> file.</li>
+        <li><strong>Create a VPC</strong> with CIDR block <code>10.0.0.0/16</code>.</li>
+        <li><strong>Define public and private subnets:</strong></li>
+        <ul>
+            <li>Public subnet: <code>10.0.1.0/24</code></li>
+            <li>Private subnet: <code>10.0.2.0/24</code></li>
+        </ul>
+        <li><strong>Setup an Internet Gateway & Route Table</strong> for public subnet access.</li>
+        <li><strong>Define Security Groups:</strong></li>
+        <ul>
+            <li>Allow SSH (22) from a specific IP range.</li>
+            <li>Allow HTTP/HTTPS traffic (80/443) for web applications.</li>
+            <li>Restrict access to RDS to only the application servers.</li>
+        </ul>
+        <li><strong>Create EC2 Instances:</strong></li>
+        <ul>
+            <li>One public instance (Ansible controller).</li>
+            <li>One private instance (Application server).</li>
+        </ul>
+        <li><strong>Deploy RDS Instance</strong> (MySQL) in the private subnet.</li>
+    </ol>
+    
+    <h3>Step 2: Use Terraform Modules for Reusability</h3>
+    <ul>
+      <li>Create separate modules for <strong>VPC, EC2, RDS, and Security Groups</strong>. </li>
+      <li>Parameterize them for different environments (<strong>dev, staging, prod</strong>).</li>
+    </ul>
+    
+    <h3>Step 3: Store Terraform State in S3 with DynamoDB Locking</h3>
+    <ul>
+      <li>Create an <strong>S3 bucket to store the Terraform state file.</strong></li>
+      <li>Enable <strong>DynamoDB table</strong> for state locking.</li>
+    </ul>
+    <h4>Example backend.tf file:</h4>
+    <pre>
+    terraform {
+      backend "s3" {
+        bucket         = "my-terraform-state"
+        key            = "prod/terraform.tfstate"
+        region         = "us-east-1"
+        dynamodb_table = "terraform-lock"
+      }
+    }
+    </pre>
+    
+    <h3>Step 4: Deploy Infrastructure Using Terraform</h3>
+    <ul>
+        <li>Initialize Terraform: <code>terraform init</code></li>
+        <li>Validate configuration: <code>terraform validate</code></li>
+        <li>Plan changes: <code>terraform plan</code></li>
+        <li>Apply changes: <code>terraform apply -auto-approve</code></li>
+    </ul>
+    
+    <h2>5. Configuration Management with Ansible</h2>
+    <h3>Ansible Setup on the Public EC2 Instance</h3>
+    <ol>
+        <li><strong>Install Ansible</strong>on the public EC2 instance.</li>
+        <li><strong>Generate an SSH Key Pair</strong> and distribute it to the private instances.</li>
+        <li><strong>Define an Inventory File</strong> (<code>inventory.ini</code>):</li>
+        <pre>
+    [app_servers]
+    10.0.2.10 ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa
+    </pre>
+        <li><strong>Write Playbooks for Configuration</strong>
+          <ul>
+            <li><strong>Install packages</strong> (Nginx, MySQL client).</li>
+            <li><strong>Deploy application code</strong> from GitHub.</li>
+          </ul>
+        </li>
+        <p><strong>Example Playbook</strong> (setup_app.yml)</p>
+        <pre>- hosts: app_servers
+  become: yes
+  tasks:
+    - name: Install Nginx
+      yum:
+        name: nginx
+        state: present
+    
+    - name: Start and enable Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+</pre>
+      <li>Run the Playbook:</li>
+      <pre>ansible-playbook -i inventory.ini setup_app.yml
+</pre>
+    </ol>
+    
+    <h2>6. CI/CD Pipeline (Optional)</h2>
+    <p>If you want to integrate this into a CI/CD pipeline:</p>
+    <ul>
+        <li><strong>Use Jenkins</strong> to trigger Terraform and Ansible jobs.</li>
+        <li><strong>Store Terraform & Ansible code in GitHub/GitLab.</strong></li>
+        <li><strong>Automate Infrastructure Updates</strong> via Jenkins pipeline.</li>
+    </ul>
+    
+    <h2>7. Testing & Validation</h2>
+    <ul>
+        <li>Verify resources using AWS Console and CLI.</li>
+        <li>Check Security Group rules and connectivity.</li>
+        <li>Test Ansible configurations by SSH into EC2.</li>
+        <li>Connect the application to the RDS database.</li>
+    </ul>
+    
+    <h2>8. Cleanup & Cost Optimization</h2>
+    <ul>
+        <li>Destroy resources using <code>terraform destroy</code> after testing.</li>
+        <li>Use AWS Budgets to monitor costs.</li>
+    </ul>
+    
+    <h2>Conclusion</h2>
+    <p>This project provides a fully automated <strong>AWS Infrastructure setup</strong> using <strong>Terraform</strong> and <strong>Ansible</strong>, ensuring reusability, scalability, and security.</p>
+</body>
+</html>
