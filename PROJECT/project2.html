@@ -1,1 +1,114 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End CI/CD Implementation Using AWS Elastic Beanstalk</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background-image: url('project1.jpg'); 
+            background-size: cover; 
+            background-position: center; 
+            color: #ffffff; 
+            text-align: center;
+        }
+        h1, h2 { color: #f1c40f; }
+        ul { line-height: 1.6; text-align: left; display: inline-block; }
+        .section { 
+            margin: 30px auto; 
+            background: rgba(0, 0, 0, 0.7); 
+            padding: 20px; 
+            border-radius: 10px; 
+            width: 80%;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>End-to-End CI/CD Implementation Using AWS Elastic Beanstalk</h1>
+    
+    <div class="section">
+        <h2>Project Overview</h2>
+        <p>This CI/CD pipeline leverages AWS cloud services and Elastic Beanstalk to automate code integration, testing, and deployment. Using AWS services such as S3, CodePipeline, and Beanstalk, it ensures a streamlined software development lifecycle. The goal is to maintain high-quality code while reducing manual intervention and deployment time.</p>
+    </div>
+    
+    <div class="section">
+        <h2>CI Pipeline (Continuous Integration)</h2>
+        <ul>
+            <li><strong>S3 Bucket Creation:</strong> Store build artifacts securely in AWS S3.</li>
+            <li><strong>Simple Notification Service (SNS):</strong> Notify stakeholders of pipeline events.</li>
+            <li><strong>AWS CodePipeline Setup:</strong> Automate CI/CD process within AWS.</li>
+            <li><strong>Connect Bitbucket Repository:</strong> Sync code changes from Bitbucket.</li>
+            <li><strong>CodeBuild for Artifact Creation:</strong> Compile and package the code.</li>
+            <li><strong>Sonar Code Analysis:</strong> Ensure code quality and security compliance.</li>
+            <li><strong>Deploying Artifacts to S3:</strong> Store processed artifacts for further deployment.</li>
+            <li><strong>Pipeline Notification Setup:</strong> Use SNS to notify teams about build status.</li>
+            <li><strong>Pipeline Execution:</strong> Code changes trigger the entire CI/CD process.</li>
+            <li><strong>Testing:</strong> Run unit and integration tests to validate code.</li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>CD Pipeline (Continuous Delivery)</h2>
+        <ul>
+            <li><strong>Developer Commits Code:</strong> Triggers the pipeline.</li>
+            <li><strong>Code Analysis:</strong> Check for quality and security vulnerabilities.</li>
+            <li><strong>Dependency Management:</strong> Resolve and manage package dependencies.</li>
+            <li><strong>Build Job:</strong> Code is compiled and built into an artifact.</li>
+            <li><strong>Deployment to Elastic Beanstalk:</strong> Deploy applications to AWS Elastic Beanstalk.</li>
+            <li><strong>Automated Testing:</strong> Run functional and regression tests.</li>
+            <li><strong>Test Results Storage:</strong> Store test reports in S3 for review.</li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>Elastic Beanstalk Deployment Strategies</h2>
+        <ul>
+            <li><strong>Rolling Updates:</strong> Deploy updates in batches to minimize downtime.</li>
+            <li><strong>Immutable Deployments:</strong> Create a new environment for each deployment to ensure rollback safety.</li>
+            <li><strong>Blue-Green Deployment:</strong> Deploy new versions in parallel and switch traffic when validated.</li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>Tools Used</h2>
+        <ul>
+            <li><strong>Version Control:</strong> Bitbucket</li>
+            <li><strong>CI/CD:</strong> AWS CodePipeline</li>
+            <li><strong>Code Analysis:</strong> SonarQube</li>
+            <li><strong>Build Tool:</strong> AWS CodeBuild</li>
+            <li><strong>Artifact Storage:</strong> AWS S3</li>
+            <li><strong>Deployment:</strong> AWS Elastic Beanstalk</li>
+            <li><strong>Monitoring & Notifications:</strong> AWS SNS</li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>Workflow</h2>
+        <ol>
+            <li>Developers push code to Bitbucket.</li>
+            <li>CodePipeline detects the commit and triggers the pipeline.</li>
+            <li>Code is analyzed for quality and security issues.</li>
+            <li>CodeBuild compiles the code and generates an artifact.</li>
+            <li>Artifacts are uploaded to an S3 bucket.</li>
+            <li>Elastic Beanstalk deploys the built application.</li>
+            <li>Automated tests validate the deployment.</li>
+            <li>Notifications are sent via SNS to update stakeholders.</li>
+        </ol>
+    </div>
+    
+    <div class="section">
+        <h2>Challenges & Solutions</h2>
+        <ul>
+            <li><strong>Challenge 1:</strong> Managing build failures due to inconsistent dependencies.<br>
+                <strong>Solution:</strong> Use dependency management tools and cache builds efficiently.</li>
+            <li><strong>Challenge 2:</strong> Securing artifacts stored in S3.<br>
+                <strong>Solution:</strong> Implement S3 encryption and access control policies.</li>
+            <li><strong>Challenge 3:</strong> Ensuring smooth application updates.<br>
+                <strong>Solution:</strong> Use Blue-Green and Immutable Deployments in Elastic Beanstalk.</li>
+        </ul>
+    </div>
+</body>
+</html>
