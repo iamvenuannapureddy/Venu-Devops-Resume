@@ -3,101 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Must-Know AWS Services for DevOps Roles</title>
+    <title>AWS Overview for DevOps Engineers</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+            background-color: #f4f4f4;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        ul {
+            list-style-type: square;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 <body>
-    <h1>Must-Know AWS Services</h1>
-    <p>These are critical for DevOps roles:</p>
+    <div class="container">
+        <h1>AWS Overview for DevOps Engineers</h1>
+        <p>Amazon Web Services (AWS) is a cloud computing platform that provides scalable, flexible, and cost-effective cloud solutions. AWS offers Infrastructure as a Service (IaaS), Platform as a Service (PaaS), and Software as a Service (SaaS) models to help organizations deploy and manage applications efficiently.</p>
+        <p>For a <strong>DevOps Engineer</strong>, AWS plays a crucial role in automating infrastructure provisioning, CI/CD, monitoring, and security.</p>
+        
+        <h2>AWS Services Commonly Used by DevOps Engineers</h2>
+        <h3>1. Compute & Containerization</h3>
+        <ul>
+            <li><strong>EC2</strong> – Virtual servers for hosting applications.</li>
+            <li><strong>Lambda</strong> – Serverless computing.</li>
+            <li><strong>ECS</strong> – Managed container orchestration.</li>
+            <li><strong>EKS</strong> – Managed Kubernetes clusters.</li>
+            <li><strong>Fargate</strong> – Serverless compute for containers.</li>
+        </ul>
+        
+        <h3>2. CI/CD (Continuous Integration & Continuous Deployment)</h3>
+        <ul>
+            <li><strong>CodeCommit</strong> – Fully managed Git-based repository.</li>
+            <li><strong>CodeBuild</strong> – Builds and tests code.</li>
+            <li><strong>CodeDeploy</strong> – Automates deployment across environments.</li>
+            <li><strong>CodePipeline</strong> – CI/CD automation pipeline.</li>
+            <li><strong>Jenkins on AWS</strong> – For advanced CI/CD workflows.</li>
+            <li><strong>GitHub Actions with AWS</strong> – Automating CI/CD workflows.</li>
+        </ul>
+        
+        <h3>3. Infrastructure as Code (IaC)</h3>
+        <ul>
+            <li><strong>AWS CloudFormation</strong> – Automates infrastructure provisioning using templates.</li>
+            <li><strong>Terraform</strong> – Infrastructure automation tool (popular among DevOps engineers).</li>
+            <li><strong>AWS CDK</strong> – Define cloud infrastructure using code.</li>
+        </ul>
+        
+        <h3>4. Networking & Security</h3>
+        <ul>
+            <li><strong>VPC(Virtual Private Cloud) </strong> – Isolated cloud network.</li>
+            <li><strong>Security Groups & NACLs </strong> – Controls network traffic.</li>
+            <li><strong>IAM</strong> – Securely manage AWS users and permissions.</li>
+            <li><strong>AWS Secrets Manager & Parameter Store</strong> – Store sensitive data securely.</li>
+            <li><strong>AWS Shield & WAF</strong> – Protection against attacks.</li>
+        </ul>
+        
+        <h3>5. Storage & Databases</h3>
+        <ul>
+            <li><strong>S3 (Simple Storage Service)</strong> – Object storagefor artifacts, logs, and backups.</li>
+            <li><strong>EBS (Elastic Block Store)</strong> – Block storage for EC2 instances.</li>
+            <li><strong>EFS (Elastic File System)</strong> – Managed file storage.</li>
+            <li><strong>RDS (Relational Database Service)</strong> – Managed databases like MySQL, PostgreSQL, etc.</li>
+            <li><strong>DynamoDB </strong> – Serverless NoSQL database.</li>
+        </ul>
+        
+        <h3>6. Monitoring & Logging</h3>
+        <ul>
+            <li><strong>CloudWatch</strong> – Monitoring logs, metrics, and alarms.</li>
+            <li><strong>AWS X-Ray</strong> – Tracing and debugging applications.</li>
+            <li><strong>AWS Config</strong> – Audits AWS resource configurations.</li>
+            <li><strong>AWS CloudTrail</strong> – Logs all API activities in AWS.</li>
+            <li><strong>Prometheus & Grafana</strong> – For Kubernetes monitoring.</li>
+        </ul>
 
-    <h2>1. Compute</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/ec2/" target="_blank">EC2</a>: To provision and manage virtual servers.</li>
-        <li><a href="https://aws.amazon.com/lambda/" target="_blank">Lambda</a>: For serverless computing to run code without provisioning servers.</li>
-        <li><a href="https://aws.amazon.com/ecs/" target="_blank">ECS</a> / <a href="https://aws.amazon.com/eks/" target="_blank">EKS</a>: For container orchestration (EKS for Kubernetes, ECS for Docker containers).</li>
-        <li><a href="https://aws.amazon.com/elasticbeanstalk/" target="_blank">Elastic Beanstalk</a>: For deploying applications quickly with minimal setup.</li>
-    </ul>
+        <h3>7. Message Queues & Notifications</h3>
+        <ul>
+            <li><strong>SQS (Simple Queue Service)</strong> – Message queuing for decoupled applications.</li>
+            <li><strong>SNS (Simple Notification Service)</strong> – Publish-subscribe messaging.</li>
+            <li><strong>Amazon MQ </strong> – Managed RabbitMQ and ActiveMQ.</li>
+        </ul>
 
-    <h2>2. Storage</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/s3/" target="_blank">S3</a>: For storing and retrieving objects, widely used for CI/CD artifacts.</li>
-        <li><a href="https://aws.amazon.com/ebs/" target="_blank">EBS</a>: For persistent storage volumes for EC2 instances.</li>
-        <li><a href="https://aws.amazon.com/efs/" target="_blank">EFS</a>: Managed NFS for scalable file storage.</li>
-    </ul>
-
-    <h2>3. Networking</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/vpc/" target="_blank">VPC</a>: Essential for setting up a secure, isolated network for your resources.</li>
-        <li><a href="https://aws.amazon.com/route53/" target="_blank">Route 53</a>: For domain registration and DNS routing.</li>
-        <li><a href="https://aws.amazon.com/elasticloadbalancing/" target="_blank">Elastic Load Balancing (ELB)</a>: To distribute incoming traffic across multiple resources.</li>
-        <li><a href="https://aws.amazon.com/cloudfront/" target="_blank">CloudFront</a>: Content Delivery Network (CDN) for caching and global delivery.</li>
-    </ul>
-
-    <h2>4. CI/CD</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/codepipeline/" target="_blank">CodePipeline</a>: To automate the build, test, and deploy process.</li>
-        <li><a href="https://aws.amazon.com/codebuild/" target="_blank">CodeBuild</a>: For building and testing code.</li>
-        <li><a href="https://aws.amazon.com/codedeploy/" target="_blank">CodeDeploy</a>: For automated deployment to various environments (e.g., EC2, Lambda, ECS).</li>
-        <li><a href="https://aws.amazon.com/codecommit/" target="_blank">CodeCommit</a>: A source control service similar to Git.</li>
-    </ul>
-
-    <h2>5. Monitoring & Logging</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/cloudwatch/" target="_blank">CloudWatch</a>: For monitoring logs, metrics, and alarms.</li>
-        <li><a href="https://aws.amazon.com/cloudtrail/" target="_blank">CloudTrail</a>: For logging API calls and tracking changes in your AWS environment.</li>
-        <li><a href="https://aws.amazon.com/config/" target="_blank">AWS Config</a>: For compliance auditing and monitoring resource configurations.</li>
-    </ul>
-
-    <h2>6. Security</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/iam/" target="_blank">IAM</a>: For managing user access, roles, and policies.</li>
-        <li><a href="https://aws.amazon.com/secrets-manager/" target="_blank">Secrets Manager</a>: For securely storing credentials and API keys.</li>
-        <li><a href="https://aws.amazon.com/kms/" target="_blank">AWS Key Management Service (KMS)</a>: For encryption key management.</li>
-    </ul>
-
-    <h2>7. Infrastructure as Code (IaC)</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/cloudformation/" target="_blank">CloudFormation</a>: For deploying and managing AWS infrastructure using templates.</li>
-        <li><a href="https://aws.amazon.com/cdk/" target="_blank">AWS CDK</a>: For defining cloud infrastructure in popular programming languages.</li>
-    </ul>
-
-    <h2>8. DevOps & Developer Tools</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/xray/" target="_blank">AWS X-Ray</a>: For debugging and analyzing application traces.</li>
-        <li><a href="https://aws.amazon.com/codestar/" target="_blank">AWS CodeStar</a>: For quick setup of development projects in AWS.</li>
-    </ul>
-
-    <h2>9. Databases</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/rds/" target="_blank">RDS</a>: Managed relational databases.</li>
-        <li><a href="https://aws.amazon.com/dynamodb/" target="_blank">DynamoDB</a>: Managed NoSQL database.</li>
-        <li><a href="https://aws.amazon.com/elasticache/" target="_blank">ElastiCache</a>: For in-memory caching (Redis/Memcached).</li>
-        <li><a href="https://aws.amazon.com/rds/aurora/" target="_blank">Aurora</a>: High-performance relational database engine.</li>
-    </ul>
-
-    <h2>10. Container & Serverless Enhancements</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/apprunner/" target="_blank">App Runner</a>: For deploying containerized web apps without managing infrastructure.</li>
-        <li><a href="https://aws.amazon.com/fargate/" target="_blank">Fargate</a>: Serverless compute for ECS and EKS.</li>
-    </ul>
-
-    <h2>11. Cost Management</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/aws-cost-management/aws-budgets/" target="_blank">AWS Budgets</a>: To set up alerts for cost thresholds.</li>
-        <li><a href="https://aws.amazon.com/aws-cost-management/aws-cost-explorer/" target="_blank">AWS Cost Explorer</a>: For analyzing and managing AWS spending.</li>
-    </ul>
-
-    <h2>12. Advanced Networking</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/directconnect/" target="_blank">Direct Connect</a>: For dedicated, low-latency connections.</li>
-        <li><a href="https://aws.amazon.com/transit-gateway/" target="_blank">Transit Gateway</a>: For interconnecting VPCs and on-premises networks.</li>
-    </ul>
-
-    <h2>13. Machine Learning (Optional)</h2>
-    <ul>
-        <li><a href="https://aws.amazon.com/sagemaker/" target="_blank">SageMaker</a>: For deploying machine learning models (if your role overlaps with AI/ML pipelines).</li>
-    </ul>
-
-    <p>Mastering AWS services relevant to DevOps can significantly enhance your value as a DevOps Engineer and your ability to deliver high-quality infrastructure and automation solutions.</p>
+        <h3>8. AWS Security & Compliance</h3>
+        <ul>
+            <li><strong>AWS GuardDuty</strong> – Threat detection.</li>
+            <li><strong>AWS Inspector</strong> – Security assessment.</li>
+            <li><strong>AWS Trusted Advisor</strong> – Best practice recommendations.</li>
+        </ul>
+        
+        <h2>AWS DevOps Project Examples</h2>
+        <ul>
+            <li><a href="Task-01.html">1. CI/CD Pipeline with Jenkins, Nexus, SonarQube & AWS Services</a></li>
+            <li><a href="Task-02.html">2. Kubernetes Cluster Deployment on AWS (EKS)</a></li>
+            <li><a href="Task-03.html">3. Infrastructure as Code (IaC) using Terraform & Ansible</a></li>
+            <li><a href="Task-04.html">4. Dockerizing a Multi-Tier Web Application</a></li>
+            <li><a href="Task-05.html">5. AWS Serverless Application using Lambda, API Gateway & DynamoDB</a></li>
+            <li><a href="Task-06.html">6. Centralized Logging and Monitoring with ELK Stack & CloudWatch</a></li>
+            <li><a href="Task-07.html">7. Secure Multi-Account AWS Environment using AWS Organizations & IAM</a></li>
+            <li><a href="Task-08.html">8. High Availability & Auto Scaling Application with AWS ALB & RDS</a></li>
+            <li><a href="Task-09.html">9. AWS CloudFormation Stack for Automated Infrastructure Management</a></li>
+            <li><a href="Task-10.html">10. DevSecOps Pipeline with AWS Security Best Practices</a></li>
+        </ul>
+    </div>
 </body>
 </html>
 
