@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Cluster Deployment on AWS (EKS)</title>
+</head>
+<body>
+    <h1>End-to-End Kubernetes Cluster Deployment on AWS (EKS)</h1>
+    
+    <h2>Project Overview</h2>
+    <p>This project focuses on deploying a <strong>Kubernetes cluster on AWS using EKS</strong> with <strong>Terraform, Helm, Docker, Prometheus, and
+      Grafana</strong>. The deployment will include microservices with <strong>auto-scaling, load balancing, monitoring, and security best practices</strong>.</p>
+    
+    <h2>Tech Stack</h2>
+    <ul>
+        <li><strong>Container Orchestration:</strong> Kubernetes (EKS)</li>
+        <li><strong>Infrastructure as Code (IaC):</strong> Terraform</li>
+        <li><strong>Containerization:</strong> Docker</li>
+        <li><strong>Package Management:</strong> Helm</li>
+        <li><strong>Monitoring & Logging:</strong> Prometheus, Grafana</li>
+        <li><strong>Load Balancing:</strong> AWS ALB (Application Load Balancer)</li>
+        <li><strong>Security:</strong> IAM Roles, RBAC</li>
+    </ul>
+    
+    <h2>Project Architecture</h2>
+    <h3>Components:</h3>
+    <ol>
+        <li><strong>AWS EKS Cluster</strong></li>
+        <ul>
+            <li>Provisioned using <strong>Terraform</strong>.</li>
+            <li>Configured with <strong>VPC, subnets, and security groups</strong>.</li>
+            <li>Uses <strong>managed worker nodes</strong> for running workloads.</li>
+        </ul>
+        <li><strong>Microservices Deployment</strong></li>
+        <ul>
+            <li>Containerized <strong>microservices</strong> using <strong>Docker</strong>.</li>
+            <li>Deployed using <strong>Helm charts</strong>.</li>
+            <li>Services communicate internally within the cluster.</li>
+        </ul>
+        <li><strong>Auto Scaling and Load Balancing</strong></li>
+        <ul>
+            <li>Uses <strong>Kubernetes Horizontal Pod Autoscaler (HPA)</strong>.</li>
+            <li>External traffic is handled using an <strong>AWS ALB Ingress Controller</strong>.</li>
+        </ul>
+        <li><strong>Monitoring with Prometheus & Grafana</strong></li>
+        <ul>
+            <li><strong>Prometheus</strong> collects cluster metrics.</li>
+            <li><strong>Grafana</strong> visualizes metrics with custom dashboards.</li>
+        </ul>
+        <li><strong>Security Implementation</strong></li>
+        <ul>
+            <li><strong>IAM roles</strong> for secure AWS service access.</li>
+            <li><strong>RBAC policies</strong> for role-based access control.</li>
+        </ul>
+    </ol>
+    
+    <h2>Step-by-Step Implementation</h2>
+    <h3>1. Provision AWS EKS Cluster Using Terraform</h3>
+    <ul>
+        <li>Create a <strong>VPC, subnets, internet gateway, and route tables</strong>.</li>
+        <li>Deploy an <strong>EKS cluster with managed worker nodes</strong>.</li>
+        <li>Configure <strong>IAM roles</strong> for EKS and worker nodes.</li>
+        <li>Deploy <strong>AWS ALB Ingress Controller</strong>.</li>
+    </ul>
+    <h4>Terraform Files:</h4>
+    <ul>
+      <li><code>main.tf:</code> Defines AWS resources.</li>
+      <li><code>variables.tf:</code> Stores configuration variables.</li>
+      <li><code>eks.tf:</code> Provisions the EKS cluster.</li>
+      <li><code>alb.tf:</code> Sets up the AWS ALB.</li>
+    </ul>
+    
+    <h3>2. Build and Push Docker Images</h3>
+    <ul>
+      <li>Containerize microservices using <strong>Docker.</strong></li>
+      <li>Tag and push images to <strong>Amazon Elastic Container Registry (ECR).</strong></li>
+      <pre>
+    docker build -t myapp:v1 .
+    docker tag myapp:v1 &lt;AWS_ACCOUNT_ID&gt;.dkr.ecr.&lt;REGION&gt;.amazonaws.com/myapp:v1
+    docker push &lt;AWS_ACCOUNT_ID&gt;.dkr.ecr.&lt;REGION&gt;.amazonaws.com/myapp:v1
+    </pre>
+    </ul>
+    
+    
+    <h3>3. Deploy Microservices with Helm</h3>
+    <ul>
+      <li>Create <strong>Helm charts</strong> for microservices.</li>
+      <li>Define <strong>Kubernetes Deployment, Service, and Ingress</strong> in Helm templates.</li>
+      <li>Install Helm charts to deploy applications.</li>
+      <pre>
+    helm install myapp ./helm-chart/
+    </pre>
+    </ul>
+    
+    <h3>4. Configure Auto Scaling and Load Balancing</h3>
+    <ul>
+      <li>Implement Horizontal Pod Autoscaler (HPA).</li>
+      <pre><code>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: myapp-hpa
+spec:
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: 50
+</code></pre>
+      <li>Apply HPA:</li>
+      <pre>
+    kubectl apply -f hpa.yaml
+    </pre>
+      <li>Deploy AWS ALB Ingress Controller:</li>
+      <pre>helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system</pre>
+    </ul>
+    
+    
+    <h3>5. Set Up Monitoring with Prometheus and Grafana</h3>
+    <ul>
+      <li>Install Prometheus and Grafana using Helm:</li>
+      <pre>
+    helm install prometheus prometheus-community/kube-prometheus-stack
+    helm install grafana grafana/grafana
+    </pre>
+      <li>Access Grafana dashboard:</li>
+      <pre>kubectl port-forward svc/grafana 3000:80 -n monitoring</pre>
+    </ul>
+    
+    
+    <h3>6. Secure Cluster with IAM and RBAC</h3>
+    <ul>
+      <li>Define IAM roles for accessing AWS services securely.</li>
+      <li>Implement RBAC policies to restrict user permissions.</li>
+    </ul>
+    <h4>Example RBAC Policy:</h4>
+    <pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: app-role
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+</code></pre>
+    <p>Apply the policy:</p>
+    <pre>
+    kubectl apply -f rbac.yaml
+    </pre>
+    
+    <h2>Project Deliverables</h2>
+    <ul>
+        <li><strong>Terraform files</strong> for provisioning EKS.</li>
+        <li><strong>Helm charts</strong> for deploying microservices.</li>
+        <li><strong>Docker images</strong> pushed to <strong>ECR</strong>.</li>
+        <li><strong>HPA configuration</strong> for auto-scaling.</li>
+        <li><strong>ALB Ingress Controller</strong> for traffic management.</li>
+        <li><strong>Prometheus & Grafana monitoring dashboards.</strong></li>
+        <li><strong>RBAC policies and IAM roles</strong> for security.</li>
+    </ul>
+    
+    <h2>Outcome</h2>
+    <p>This project ensures a <strong>scalable, secure, and fully monitored Kubernetes environment</strong> on AWS. 
+      It follows <strong>best practices</strong> in <strong>automation, security, and observability</strong> to efficiently manage microservices in 
+      production.</p>
+    
+    <h2>Next Steps</h2>
+    <ul>
+        <li>Implement <strong>logging with Fluentd & Elasticsearch</strong>.</li>
+        <li>Configure <strong>service mesh (Istio or Linkerd)</strong>.</li>
+        <li>Add <strong>CI/CD automation using Jenkins or GitHub Actions</strong>.</li>
+    </ul>
+    
+    <p><strong>This project is ready for hands-on implementation!</strong> 🚀</p>
+</body>
+</html>
