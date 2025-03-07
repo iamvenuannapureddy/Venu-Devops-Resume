@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI/CD Pipeline with Jenkins, Nexus, SonarQube & AWS Services</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; padding: 20px; background-color: #f4f4f4; }
+        h1, h2, h3 { color: #333; }
+        code { background-color: #eee; padding: 5px; display: block; white-space: pre-wrap; }
+        pre { background-color: #eee; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>CI/CD Pipeline with Jenkins, Nexus, SonarQube & AWS Services</h1>
+    
+    <h2>🔹 Project Overview</h2>
+    <p>The goal is to set up a <strong>complete CI/CD pipeline</strong> that:</p>
+    <ul>
+        <li>✅ Automates code builds and testing</li>
+        <li>✅ Ensures code quality and security analysis</li>
+        <li>✅ Stores built artifacts in <strong>Nexus</strong> or <strong>S3</strong></li>
+        <li>✅ Deploys applications to <strong>AWS EC2 using CodeDeploy</strong></li>
+        <li>✅ Automates infrastructure provisioning with <strong>Terraform</strong></li>
+        <li>✅ Integrates <strong>Slack notifications</strong></li>
+    </ul>
+    
+    <h2>🔹 Tech Stack</h2>
+    <ul>
+        <li><strong>CI/CD:</strong> Jenkins, GitHub Actions</li>
+        <li><strong>Artifact Repository:</strong> Nexus Repository, AWS S3</li>
+        <li><strong>Code Quality:</strong> SonarQube</li>
+        <li><strong>Infrastructure as Code (IaC):</strong> Terraform</li>
+        <li><strong>Configuration Management:</strong> Ansible</li>
+        <li><strong>Deployment:</strong> AWS CodeDeploy, EC2</li>
+        <li><strong>Notifications:</strong> Slack</li>
+    </ul>
+    
+    <h2>🔹 Project Architecture</h2>
+    <ol>
+        <li><strong>Developers</strong> push code to <strong>GitHub</strong>.</li>
+        <li><strong>Jenkins Pipeline</strong> triggers on code commit.</li>
+        <li><strong>SonarQube</strong> scans for code quality.</li>
+        <li><strong>Maven/Gradle</strong> builds the application.</li>
+        <li>Artifacts are stored in <strong>Nexus Repository or S3</strong>.</li>
+        <li><strong>Terraform</strong> provisions AWS infrastructure.</li>
+        <li><strong>Ansible</strong> configures EC2 instances.</li>
+        <li><strong>AWS CodeDeploy</strong> deploys artifacts to EC2.</li>
+        <li><strong>Slack notifications</strong> inform about pipeline progress.</li>
+    </ol>
+    
+    <h2>🔹 Step-by-Step Implementation</h2>
+    
+    <h3>Step 1: Setup Jenkins on AWS EC2</h3>
+    <ol>
+      <li>Launch an AWS EC2 instance for Jenkins.</li>
+      <li>Install <strong>Java, Jenkins, and required plugins:</strong></li>
+    
+    <pre><code>sudo apt update
+sudo apt install openjdk-11-jdk -y
+wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt update
+sudo apt install jenkins -y
+sudo systemctl start jenkins
+sudo systemctl enable jenkins
+</code></pre>
+      <li>Configure Jenkins with required plugins:
+        <ul>
+          <li><strong>Git Plugin</strong></li>
+          <li><strong>Pipeline Plugin</strong></li>
+          <li><strong>SonarQube Scanner Plugin</strong></li>
+          <li><strong>Nexus Artifact Uploader Plugin</strong></li>
+          <li><strong>AWS CodeDeploy Plugin</strong></li>
+          <li><strong>Slack Notification Plugin</strong></li>
+        </ul>
+      </li>
+    </ol>
+    <h3>Step 2: Install & Configure Nexus Repository</h3>
+    <ol>
+      <li>Launch another EC2 instance for Nexus Repository.</li>
+      <li>Install Nexus:</li>
+      <pre><code>sudo yum install -y java-1.8.0-openjdk
+wget https://download.sonatype.com/nexus/3/latest-unix.tar.gz
+tar -xvzf latest-unix.tar.gz
+mv nexus-3* nexus
+sudo mv nexus /opt/
+sudo useradd nexus
+sudo chown -R nexus:nexus /opt/nexus
+sudo su - nexus
+/opt/nexus/bin/nexus start</code></pre>
+      <li>Access <strong>http://<Nexus-EC2-Public-IP>:8081</strong> and create a <strong>Maven Repository.</strong></li>
+    </ol>
+     
+    <h3>Step 3: Install & Configure SonarQube</h3>
+    <ol>
+      <li>Launch an EC2 instance for SonarQube.</li>
+      <li>Install Java & SonarQube:</li>
+      <pre><code>sudo yum install -y java-11-openjdk
+sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.0.0.45539.zip
+sudo unzip sonarqube-9.0.0.45539.zip -d /opt/
+sudo mv /opt/sonarqube-9.0.0.45539 /opt/sonarqube
+sudo useradd sonar
+sudo chown -R sonar:sonar /opt/sonarqube
+sudo su - sonar
+/opt/sonarqube/bin/linux-x86-64/sonar.sh start</code></pre>
+      <li>Access <strong>http://<SonarQube-EC2-Public-IP>:9000</strong> and configure SonarQube.</li>
+    </ol>
+    
+    <h3>Step 4: Write the Jenkins Pipeline</h3>
+    <h4>Jenkinsfile:</h4>
+    <pre><code>pipeline {
+    agent any
+    environment {
+        SONARQUBE_URL = 'http://&lt;SonarQube-IP&gt;:9000'
+        NEXUS_REPO = 'http://&lt;Nexus-IP&gt;:8081/repository/maven-releases/'
+    }
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-repo.git'
+            }
+        }
+        stage('Code Quality Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+        stage('Build and Test') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('Publish Artifact to Nexus') {
+            steps {
+                sh 'mvn deploy -DaltDeploymentRepository=nexus::default::${NEXUS_REPO}'
+            }
+        }
+        stage('Deploy to AWS using CodeDeploy') {
+            steps {
+                sh 'aws deploy create-deployment --application-name MyApp --deployment-group-name MyDeploymentGroup --s3-location bucket=my-s3-bucket,key=my-app.zip,bundleType=zip'
+            }
+        }
+        stage('Slack Notification') {
+            steps {
+                slackSend(channel: '#devops-alerts', message: 'Deployment Completed!')
+            }
+        }
+    }
+}</code></pre>
+
+    <h3>Step 5: Automate Infrastructure with Terraform</h3>
+    <h4>Terraform script for AWS EC2 & S3 bucket:</h4>
+    <pre><code>provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_s3_bucket" "artifact_bucket" {
+  bucket = "my-ci-cd-artifacts"
+}
+
+resource "aws_instance" "jenkins_server" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.medium"
+  key_name      = "my-key"
+  security_groups = ["jenkins-sg"]
+
+  tags = {
+    Name = "Jenkins-Server"
+  }
+}
+</code></pre>
+    <h4>Deploy with Terraform:</h4>
+    <pre><code>terraform init
+terraform apply -auto-approve
+</code></pre>
+
+    <h3>Step 6: Configure Ansible for EC2 Setup</h3>
+    <h4>Ansible playbook to install Apache on EC2:</h4>
+    <pre>- name: Install Apache
+  hosts: all
+  become: true
+  tasks:
+    - name: Install Apache
+      yum:
+        name: httpd
+        state: present
+    - name: Start Apache
+      service:
+        name: httpd
+        state: started
+</pre>
+    <h4>Run playbook:</h4>
+    <pre><code>ansible-playbook -i inventory.ini deploy.yml
+</code></pre>
+
+    <h3>Step 7: Deploy with AWS CodeDeploy</h3>
+    <ol>
+      <li>Create AppSpec.yml for deployment:</li>
+      <pre>version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /var/www/html/
+hooks:
+  AfterInstall:
+    - location: scripts/restart-apache.sh
+      timeout: 300
+      runas: root
+</pre>
+      <li>Upload AppSpec.yml & App to S3.</li>
+
+    <h3>Step 8: Add Slack Notifications</h3>
+      <ol>
+        <li>Install Slack Plugin in Jenkins.</li>
+        <li>Configure Slack Webhook.</li>
+        <li>Modify Jenkinsfile to send messages.</li>
+    </ol>
+      
+    <h2>🚀 Conclusion</h2>
+    <p>This project helps you master <strong>CI/CD automation</strong> using <strong>AWS DevOps tools</strong>. You’ve now:</p>
+    <ul>
+        <li>✅ Set up <strong>Jenkins, Nexus, SonarQube</strong></li>
+        <li>✅ Automated <strong>Build, Test, Deploy</strong></li>
+        <li>✅ Implemented <strong>AWS CodeDeploy</strong></li>
+        <li>✅ Used <strong>Terraform & Ansible for automation</strong></li>
+        <li>✅ Integrated <strong>Slack for alerts</strong></li>
+    </ul>
+</body>
+</html>
