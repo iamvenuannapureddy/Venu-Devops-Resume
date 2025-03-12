@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Tier Web Application Deployment Using Terraform on AWS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 5px;
+            display: block;
+            white-space: pre-wrap;
+            border-left: 4px solid #3498db;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Multi-Tier Web Application Deployment Using Terraform on AWS</h1>
+
+    <h2>Task Overview</h2>
+    <p>This task involves deploying a <strong>3-tier web application</strong> architecture using <strong>Terraform</strong> on AWS. The architecture consists of:</p>
+    <ul>
+        <li><strong>Web Tier</strong> – A public-facing <strong>Application Load Balancer (ALB)</strong> distributing traffic to the App Tier.</li>
+        <li><strong>App Tier</strong> – <strong>EC2 instances</strong> running the application.</li>
+        <li><strong>Database Tier</strong> – A managed <strong>RDS database instance</strong>.</li>
+    </ul>
+    <p>Terraform will be used to <strong>automate infrastructure provisioning</strong>.</p>
+
+    <h2>Architecture Diagram</h2>
+    <h3>Components:</h3>
+    <ul>
+        <li><strong>VPC</strong>: A dedicated Virtual Private Cloud.</li>
+        <li><strong>Subnets</strong>: Public and private subnets for different tiers.</li>
+        <li><strong>Security Groups</strong>: Controlled access rules.</li>
+        <li><strong>ALB (Application Load Balancer)</strong>: Distributes incoming traffic.</li>
+        <li><strong>Auto Scaling Group (ASG)</strong>: Dynamically scales EC2 instances.</li>
+        <li><strong>RDS (Relational Database Service)</strong>: Managed database backend.</li>
+        <li><strong>IAM Roles</strong>: Permissions for EC2 and RDS access.</li>
+        <li><strong>Route 53 (Optional)</strong>: DNS management.</li>
+    </ul>
+
+    <h2>Project Implementation Steps</h2>
+
+    <h3>Step 1: Define Terraform Provider</h3>
+    <p>Create a <code>provider.tf</code> file to define AWS as the Terraform provider.</p>
+    <pre><code>provider "aws" {
+  region = "us-east-1"
+}</code></pre>
+
+    <h3>Step 2: Create Networking Components (VPC, Subnets, Route Tables)</h3>
+    <p>Define a VPC and necessary subnets in <code>network.tf.</code></p>
+    <pre><code>resource "aws_vpc" "my_vpc" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = aws_vpc.my_vpc.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+}
+
+resource "aws_subnet" "private_subnet" {
+  vpc_id     = aws_vpc.my_vpc.id
+  cidr_block = "10.0.2.0/24"
+}
+</code></pre>
+
+    <h3>Step 3: Create an Application Load Balancer (ALB)</h3>
+    <p>Define ALB to route traffic to the app instances in <code>alb.tf.</code></p>
+    <pre><code>resource "aws_lb" "app_alb" {
+  name               = "app-load-balancer"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb_sg.id]
+  subnets           = [aws_subnet.public_subnet.id]
+}
+
+resource "aws_lb_target_group" "app_tg" {
+  name     = "app-target-group"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.my_vpc.id
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.app_alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app_tg.arn
+  }
+}
+</code></pre>
+
+    <h3>Step 4: Create an EC2 Instance for the Application</h3>
+    <p>Define an EC2 instance and security group in <code>ec2.tf.</code></p>
+    <pre><code>resource "aws_security_group" "ec2_sg" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "app_server" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.private_subnet.id
+  security_groups = [aws_security_group.ec2_sg.name]
+
+  user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              yum install -y httpd
+              systemctl start httpd
+              systemctl enable httpd
+              echo "Hello from App Tier" > /var/www/html/index.html
+              EOF
+}
+</code></pre>
+
+    <h3>Step 5: Configure Auto Scaling for the Application Tier</h3>
+    <p>Define an Auto Scaling Group (ASG) in autoscaling.tf.</p>
+    <pre><code>resource "aws_launch_configuration" "app_lc" {
+  name          = "app-launch-config"
+  image_id      = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "app_asg" {
+  launch_configuration = aws_launch_configuration.app_lc.id
+  vpc_zone_identifier  = [aws_subnet.private_subnet.id]
+  desired_capacity     = 2
+  min_size            = 1
+  max_size            = 3
+}
+</code></pre>
+
+    <h3>Step 6: Deploy a Database Using RDS</h3>
+    <p>Define an RDS instance in <code>rds.tf</code>.</p>
+    <pre><code>resource "aws_db_instance" "app_db" {
+  identifier             = "app-db"
+  allocated_storage      = 20
+  engine                = "mysql"
+  engine_version        = "8.0"
+  instance_class        = "db.t2.micro"
+  username             = "admin"
+  password             = "mypassword"
+  publicly_accessible  = false
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+  db_subnet_group_name  = aws_db_subnet_group.db_subnet_group.name
+}
+</code></pre>
+
+    <h3>Step 7: Configure Security Groups</h3>
+    <p>Define security groups for ALB, EC2, and RDS in <code>security.tf</code>.</p>
+    <pre><code>resource "aws_security_group" "alb_sg" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "rds_sg" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    security_groups = [aws_security_group.ec2_sg.id]
+  }
+}
+</code></pre>
+
+    <h3>Step 8: Output Application and Database Information</h3>
+    <p>Define outputs in <code>outputs.tf.</code></p>
+    <pre><code>output "alb_dns_name" {
+  value = aws_lb.app_alb.dns_name
+}
+
+output "database_endpoint" {
+  value = aws_db_instance.app_db.endpoint
+  sensitive = true
+}
+</code></pre>
+
+    <h3>Step 9: Deploy the Infrastructure</h3>
+    <p>Run the following Terraform commands:</p>
+    <pre><code>terraform init
+terraform plan
+terraform apply -auto-approve
+</code></pre>
+
+    <h3>Step 10: Testing the Deployment</h3>
+    <p>Copy the ALB DNS name from Terraform output and open it in a browser.</p>
+    <p>You should see <code>Hello from App Tier</code>.</p>
+
+    <h2>Project Summary</h2>
+    <ul>
+        <li><strong>VPC</strong> with public and private subnets.</li>
+        <li><strong>ALB</strong> to distribute traffic.</li>
+        <li><strong>EC2 Instance</strong> running a simple web application.</li>
+        <li><strong>Auto Scaling Group</strong> for high availability.</li>
+        <li><strong>RDS (MySQL)</strong> database for backend storage.</li>
+        <li><strong>Security Groups</strong> to control traffic.</li>
+    </ul>
+
+    <h2>Future Enhancements</h2>
+    <ul>
+        <li><strong>Use Terraform Modules</strong> for better code organization.</li>
+        <li><strong>Implement CI/CD</strong> to automate deployment.</li>
+        <li><strong>Use Route 53</strong> for custom domain mapping.</li>
+        <li><strong>Enable TLS/SSL</strong> for secure communication.</li>
+    </ul>
+</body>
+</html>
