@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Project: Deploying Microservices with Service Mesh on Kubernetes using Terraform</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 5px;
+            display: block;
+            white-space: pre-wrap;
+            border-left: 4px solid #3498db;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1> Deploying Microservices with Service Mesh on Kubernetes using Terraform</h1>
+    
+    <h2>Project Overview</h2>
+    <p>In this project, we will deploy microservices in a Kubernetes cluster using a <strong>service mesh (Istio or Linkerd)</strong> for <strong>service discovery, traffic management, and security</strong>. Terraform will be used for infrastructure automation, ensuring a reproducible and scalable deployment.</p>
+    
+    <h2>Technology Stack</h2>
+    <ul>
+        <li><strong>Infrastructure Provisioning:</strong> Terraform</li>
+        <li><strong>Container Orchestration:</strong> Kubernetes (EKS/GKE/AKS or self-hosted)</li>
+        <li><strong>Service Mesh:</strong> Istio / Linkerd</li>
+        <li><strong>CI/CD Pipeline:</strong> Jenkins / GitHub Actions / ArgoCD</li>
+        <li><strong>Containerization:</strong> Docker</li>
+        <li><strong>Monitoring & Logging:</strong> Prometheus, Grafana, Jaeger (for tracing)</li>
+        <li><strong>Load Balancer & Ingress:</strong> Istio Gateway / Nginx</li>
+        <li><strong>Storage:</strong> Amazon RDS / PostgreSQL / MySQL</li>
+        <li><strong>Security:</strong> mTLS (Istio), Kubernetes RBAC, IAM roles</li>
+    </ul>
+    
+    <h2>Project Architecture</h2>
+    <ol>
+        <li><strong>Infrastructure Setup</strong>
+            <ul>
+                <li>Use <strong>Terraform</strong> to provision a Kubernetes cluster (EKS, GKE, AKS).</li>
+                <li>Deploy <strong>Istio or Linkerd</strong> as a service mesh.</li>
+                <li>Set up <strong>IAM roles and RBAC</strong> for security.</li>
+            </ul>
+        </li>
+        <li><strong>Microservices Development</strong>
+            <ul>
+                <li>Implement multiple <strong>containerized microservices</strong> (e.g., User Service, Order Service, Payment Service).</li>
+                <li>Services communicate using <strong>gRPC or REST</strong>.</li>
+                <li>Store data in <strong>PostgreSQL/MySQL</strong>.</li>
+            </ul>
+        </li>
+        <li><strong>Service Mesh Integration</strong>
+            <ul>
+                <li>Install <strong>Istio/Linkerd</strong> using Terraform and Helm.</li>
+                <li>Enable <strong>automatic sidecar injection</strong>.</li>
+                <li>Implement <strong>traffic control</strong> with virtual services and destination rules.</li>
+            </ul>
+        </li>
+        <li><strong>CI/CD Pipeline</strong>
+            <ul>
+                <li>Automate builds using <strong>Jenkins/GitHub Actions/ArgoCD</strong>.</li>
+                <li>Deploy services to Kubernetes using <strong>Helm or Kustomize</strong>.</li>
+            </ul>
+        </li>
+        <li><strong>Traffic Management & Load Balancing</strong>
+            <ul>
+                <li>Implement <strong>Istio Ingress Gateway</strong>.</li>
+                <li>Route traffic using <strong>VirtualService and DestinationRule</strong>.</li>
+            </ul>
+        </li>
+        <li><strong>Observability & Monitoring</strong>
+            <ul>
+                <li><strong>Prometheus & Grafana</strong> for metrics.</li>
+                <li><strong>Jaeger</strong> for distributed tracing.</li>
+                <li><strong>Kibana/ELK Stack</strong> for logs.</li>
+            </ul>
+        </li>
+        <li><strong>Security & Access Control</strong>
+            <ul>
+                <li>Implement <strong>mTLS</strong> for service-to-service communication.</li>
+                <li>Use <strong>JWT authentication & OAuth2</strong>.</li>
+                <li>Apply <strong>RBAC policies</strong>.</li>
+            </ul>
+        </li>
+    </ol>
+    
+    <h2>Step-by-Step Implementation Plan</h2>
+    <h3>Step 1: Provision Kubernetes Cluster with Terraform</h3>
+    <ul>
+        <li>Use Terraform to create an <strong>EKS (AWS), GKE (Google), or AKS (Azure) cluster</strong>.</li>
+        <li>Deploy <strong>worker nodes</strong> with auto-scaling groups.</li>
+        <li>Configure <strong>IAM roles & security groups</strong>.</li>
+    </ul>
+    
+    <h3>Step 2: Deploy Istio/Linkerd as a Service Mesh</h3>
+    <ul>
+        <li>Install <strong>Istio using Helm charts</strong>.</li>
+        <li>Enable <strong>sidecar injection</strong> for automatic proxying.</li>
+        <li>Deploy <strong>Istio Gateway, VirtualService, DestinationRule</strong>.</li>
+    </ul>
+    
+    <h3>Step 3: Develop and Deploy Microservices</h3>
+    <ul>
+        <li>Create <strong>Dockerized microservices</strong> (User, Order, Payment).</li>
+        <li>Build Kubernetes <strong>manifests or Helm charts</strong>.</li>
+        <li>Deploy microservices with Kubernetes.</li>
+    </ul>
+    
+    <h3>Step 4: Implement CI/CD Pipeline</h3>
+    <ul>
+        <li>Automate Docker image builds with <strong>Jenkins/GitHub Actions</strong>.</li>
+        <li>Deploy using <strong>ArgoCD</strong> for GitOps.</li>
+    </ul>
+    
+    <h3>Step 5: Configure Service Mesh Features</h3>
+    <ul>
+        <li>Enable <strong>traffic splitting, retries, and circuit breaking</strong>.</li>
+        <li>Secure services with <strong>mTLS and RBAC policies</strong>.</li>
+    </ul>
+    
+    <h3>Step 6: Implement Observability</h3>
+    <ul>
+        <li>Configure <strong>Prometheus & Grafana</strong> for monitoring.</li>
+        <li>Enable <strong>Jaeger</strong> for distributed tracing.</li>
+        <li>Set up <strong>log aggregation with ELK</strong>.</li>
+    </ul>
+    
+    <h3>Step 7: Test and Optimize</h3>
+    <ul>
+        <li>Perform <strong>load testing</strong>.</li>
+        <li>Monitor service behavior and adjust <strong>traffic policies</strong>.</li>
+    </ul>
+    
+    <h2>Project Deliverables</h2>
+    <ul>
+        <li>✔ Terraform scripts for infrastructure</li>
+        <li>✔ Kubernetes manifests for microservices</li>
+        <li>✔ Helm charts for Istio deployment</li>
+        <li>✔ CI/CD pipeline configuration</li>
+        <li>✔ Service mesh traffic management rules</li>
+        <li>✔ Monitoring & logging setup</li>
+    </ul>
+</body>
+</html>
