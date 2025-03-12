@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S3 Bucket Management with Versioning, Encryption, and Lifecycle Policies</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 5px;
+            display: block;
+            white-space: pre-wrap;
+            border-left: 4px solid #3498db;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1> S3 Bucket Management with Versioning, Encryption, and Lifecycle Policies</h1>
+    
+    <h2>Objective</h2>
+    <p>This project aims to automate the creation, management, and deletion of Amazon S3 buckets while implementing essential features such as versioning, encryption, and lifecycle policies using <strong>Terraform</strong> and <strong>AWS CLI</strong>.</p>
+    
+    <h2>Prerequisites</h2>
+    <ul>
+        <li>AWS Account</li>
+        <li>IAM User with <code>AmazonS3FullAccess</code> and <code>IAMFullAccess</code> permissions</li>
+        <li>Terraform installed on the local machine</li>
+        <li>AWS CLI configured with IAM user credentials</li>
+        <li>A code editor like VS Code</li>
+    </ul>
+    
+    <h2>Project Implementation Steps</h2>
+    
+    <h3>1. Setup AWS CLI and Configure IAM Permissions</h3>
+    <ol>
+        <li><strong>Install AWS CLI</strong> if not installed:</li>
+        <pre><code>sudo apt install awscli -y  # For Ubuntu
+brew install awscli         # For Mac</code></pre>
+        <li><strong>Configure AWS CLI</strong> with IAM credentials:</li>
+        <pre><code>aws configure</code></pre>
+        <p>Provide:</p>
+        <ul>
+            <li>AWS Access Key</li>
+            <li>AWS Secret Key</li>
+            <li>Default region (e.g., <code>us-east-1</code>)</li>
+            <li>Output format (e.g., <code>json</code>)</li>
+        </ul>
+    </ol>
+    
+    <h3>2. Define S3 Bucket Configuration using Terraform</h3>
+    <p>We will use Terraform to:</p>
+    <ul>
+        <li>Create an S3 bucket</li>
+        <li>Enable versioning</li>
+        <li>Apply server-side encryption</li>
+        <li>Add lifecycle rules</li>
+    </ul>
+    
+    <h4>Create a Terraform Project Directory</h4>
+    <pre><code>mkdir s3-management-project && cd s3-management-project
+touch main.tf variables.tf outputs.tf</code></pre>
+    
+    <h4>Define <code>variables.tf</code></h4>
+    <pre><code>variable "bucket_name" {
+  description = "The name of the S3 bucket"
+  type        = string
+}
+
+variable "region" {
+  description = "AWS region"
+  type        = string
+  default     = "us-east-1"
+}</code></pre>
+    
+    <h4>Define <code>main.tf</code></h4>
+    <pre><code>provider "aws" {
+  region = var.region
+}
+
+resource "aws_s3_bucket" "s3_bucket" {
+  bucket = var.bucket_name
+}
+
+resource "aws_s3_bucket_versioning" "versioning" {
+  bucket = aws_s3_bucket.s3_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
+  bucket = aws_s3_bucket.s3_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "lifecycle" {
+  bucket = aws_s3_bucket.s3_bucket.id
+
+  rule {
+    id     = "delete-old-versions"
+    status = "Enabled"
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+  }
+}
+
+output "bucket_name" {
+  value = aws_s3_bucket.s3_bucket.id
+}
+</code></pre>
+    
+    <h3>3. Deploy the S3 Bucket using Terraform</h3>
+    <ol>
+        <li><strong>Initialize Terraform</strong></li>
+        <pre><code>terraform init</code></pre>
+        <li><strong>Validate the configuration</strong></li>
+        <pre><code>terraform validate</code></pre>
+        <li><strong>Apply the changes to create the bucket</strong></li>
+        <pre><code>terraform apply -auto-approve</code></pre>
+        <li><strong>Verify bucket creation using AWS CLI</strong></li>
+        <pre><code>aws s3 ls</code></pre>
+    </ol>
+    
+    <h3>4. Upload and Manage Objects in S3</h3>
+    <h4>Upload a File</h4>
+    <pre><code>aws s3 cp test-file.txt s3://your-bucket-name/</code></pre>
+    
+    <h4>Check Bucket Versioning</h4>
+    <pre><code>aws s3api list-object-versions --bucket your-bucket-name</code></pre>
+    
+    <h3>5. Enable Bucket Policy for Security</h3>
+    <h4>To restrict access to specific IAM users or allow public access for static websites, create a policy.json file:</h4>
+    <pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::your-bucket-name",
+        "arn:aws:s3:::your-bucket-name/*"
+      ],
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      }
+    }
+  ]
+}</code></pre>
+    <h4>Apply the policy</h4>
+    <pre><code>aws s3api put-bucket-policy --bucket your-bucket-name --policy file://policy.json</code></pre>
+    
+    <h3>6. Test Lifecycle Policy</h3>
+    <ul>
+      <li>Upload an object</li>
+      <li>Delete the object</li>
+      <li>Check versioning and lifecycle rules</li>
+    </ul>
+    <pre><code>aws s3 rm s3://your-bucket-name/test-file.txt
+aws s3api list-object-versions --bucket your-bucket-name</code></pre>
+    
+    <h3>7. Delete S3 Bucket</h3>
+    <p>To clean up:</p>
+    <pre><code>terraform destroy -auto-approve</code></pre>
+    <p>Alternatively, using AWS CLI:</p>
+    <pre><code>aws s3 rb s3://your-bucket-name --force</code></pre>
+    
+    <h2>Conclusion</h2>
+    <p>This project covered:</p>
+    <ul>
+        <li>Creating an <strong>S3 bucket</strong> with <strong>Terraform</strong></li>
+        <li>Enabling <strong>versioning, encryption, and lifecycle policies</strong></li>
+        <li>Managing objects via <strong>AWS CLI</strong></li>
+        <li>Applying <strong>IAM bucket policies</strong></li>
+        <li><strong>Deleting</strong> the bucket when no longer needed</li>
+    </ul>
+    <p>This approach ensures <strong>automated, secure, and compliant</strong> S3 bucket management. 🚀</p>
+</body>
+</html>
