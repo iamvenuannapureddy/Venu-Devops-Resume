@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Project: Automating Firewall Configuration using Ansible</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        code { font-family: "Courier New", monospace; }
+    </style>
+</head>
+<body>
+    <h1> Automating Firewall Configuration using Ansible</h1>
+    
+    <h2>Task Overview</h2>
+    <p>This Task aims to automate the setup and management of firewall rules using Ansible. The automation will configure either <strong>UFW (Uncomplicated Firewall)</strong> or <strong>firewalld</strong> based on the system's firewall service, ensuring security best practices by allowing/denying specific ports and IPs.</p>
+    
+    <h2>Task Scope</h2>
+    <ol>
+        <li><strong>Provisioning Firewall Services</strong>
+            <ul>
+                <li>Install and enable UFW for Debian-based systems or firewalld for RHEL-based systems.</li>
+                <li>Ensure the firewall service is enabled at boot.</li>
+            </ul>
+        </li>
+        <li><strong>Firewall Rule Management</strong>
+            <ul>
+              <li>Define rules for</li>
+                  <ul>
+                      <li>Allowing or denying specific ports (e.g., SSH, HTTP, HTTPS, custom applications).</li>
+                      <li>Restricting access to specific IP addresses or networks.</li>
+                      <li>Configuring default policies (deny incoming, allow outgoing, etc.).</li>
+                  </ul>
+            </ul>
+        </li>
+        <li><strong>Testing and Validation</strong></li>
+            <ul>
+              <li>Verify that firewall rules are applied correctly.</li>
+              <li>Ensure no unintended access is allowed.</li>
+              <li>Confirm firewall persistence across reboots.</li>
+            </ul> 
+        <li><strong>Logging and Monitoring</strong></li>
+            <ul>
+              <li>Enable logging of blocked requests.</li>
+              <li>Verify rules via Ansible and system firewall logs.</li>
+            </ul>
+        <li><strong>Rollback Mechanism</strong></li>
+            <ul>
+              <li>Implement a rollback plan to revert firewall rules in case of misconfigurations.</li>
+            </ul>
+    </ol>
+
+    <h2>Technologies Used</h2>
+    <ul>
+        <li><strong>Ansible:</strong>Configuration management tool for automation.</li>
+        <li><strong>UFW (Uncomplicated Firewall)</strong>Default firewall for Debian/Ubuntu systems.</li>
+        <li><strong>Firewalld</strong>Default firewall for RHEL/CentOS systems.</li>
+        <li><strong>YAML</strong>For defining Ansible playbooks.</li>
+        <li><strong>Bash/Shell:</strong> For manual validation.</li>
+        <li><strong>Linux (Ubuntu/CentOS)</strong>Target OS for firewall automation.</li>
+    </ul>
+
+    <h2>Task Implementation Plan</h2>
+    
+    <h3>Step 1: Setup Ansible Control Node</h3>
+    <h4>Step 1: Setup Ansible Control Node</h4>
+      <ul>
+        <li>Install Ansible on a control node.</li>
+        <li>Create an inventory file defining the target servers.</li>
+      </ul>
+    <pre><code>[firewall_servers]
+server1 ansible_host=192.168.1.100 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa
+server2 ansible_host=192.168.1.101 ansible_user=root ansible_ssh_private_key_file=~/.ssh/id_rsa</code></pre>
+
+    <h3>Step 2: Create Ansible Playbook</h3>
+      <p>The playbook will:</p>
+      <ul>
+        <li>Detect whether the target OS is Ubuntu/Debian or RHEL/CentOS.</li>
+        <li>Install and configure the respective firewall (UFW or firewalld).</li>
+        <li>Apply firewall rules from a predefined configuration.</li>
+      </ul>
+    <p><strong>Playbook:</strong> firewall_setup.yml</p>
+    <pre><code>---
+- name: Configure Firewall
+  hosts: firewall_servers
+  become: yes
+  tasks:
+
+    - name: Install UFW on Debian-based systems
+      apt:
+        name: ufw
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install Firewalld on RHEL-based systems
+      yum:
+        name: firewalld
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Start and enable firewall service (UFW)
+      service:
+        name: ufw
+        state: started
+        enabled: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Start and enable firewall service (Firewalld)
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Set default policies (UFW)
+      command: ufw default deny incoming
+      when: ansible_os_family == "Debian"
+
+    - name: Set default policies (Firewalld)
+      command: firewall-cmd --set-default-zone=drop
+      when: ansible_os_family == "RedHat"
+
+    - name: Allow SSH (UFW)
+      command: ufw allow ssh
+      when: ansible_os_family == "Debian"
+
+    - name: Allow SSH (Firewalld)
+      command: firewall-cmd --permanent --add-service=ssh
+      when: ansible_os_family == "RedHat"
+
+    - name: Allow HTTP (UFW)
+      command: ufw allow 80/tcp
+      when: ansible_os_family == "Debian"
+
+    - name: Allow HTTP (Firewalld)
+      command: firewall-cmd --permanent --add-port=80/tcp
+      when: ansible_os_family == "RedHat"
+
+    - name: Allow HTTPS (UFW)
+      command: ufw allow 443/tcp
+      when: ansible_os_family == "Debian"
+
+    - name: Allow HTTPS (Firewalld)
+      command: firewall-cmd --permanent --add-port=443/tcp
+      when: ansible_os_family == "RedHat"
+
+    - name: Allow specific IP to access port 8080 (UFW)
+      command: ufw allow from 192.168.1.50 to any port 8080
+      when: ansible_os_family == "Debian"
+
+    - name: Allow specific IP to access port 8080 (Firewalld)
+      command: firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.1.50" port port="8080" protocol="tcp" accept'
+      when: ansible_os_family == "RedHat"
+
+    - name: Enable UFW
+      command: ufw enable
+      when: ansible_os_family == "Debian"
+
+    - name: Reload Firewalld
+      command: firewall-cmd --reload
+      when: ansible_os_family == "RedHat"
+
+    - name: Display Firewall Rules (UFW)
+      command: ufw status verbose
+      register: ufw_status
+      when: ansible_os_family == "Debian"
+
+    - name: Display Firewall Rules (Firewalld)
+      command: firewall-cmd --list-all
+      register: firewalld_status
+      when: ansible_os_family == "RedHat"
+
+    - debug:
+        msg: "{{ ufw_status.stdout }}"
+      when: ansible_os_family == "Debian"
+
+    - debug:
+        msg: "{{ firewalld_status.stdout }}"
+      when: ansible_os_family == "RedHat"
+</code></pre>
+
+    <h3>Step 3: Execute the Playbook</h3>
+    <p>Run the playbook to apply firewall rules across all target servers.</p>
+    <pre><code>ansible-playbook -i inventory firewall_setup.yml</code></pre>
+
+    <h3>Step 4: Validate Firewall Configuration</h3>
+      <h4>For UFW:</h4>
+    <pre><code>sudo ufw status verbose</code></pre>
+      <h4>For Firewalld:</h4>
+    <pre><code>sudo firewall-cmd --list-all</code></pre>
+      <h4>Check logs for dropped packets:</h4>
+    <pre><code>sudo journalctl -xe | grep 'firewalld'
+sudo dmesg | grep 'UFW'
+</code></pre>
+  
+    <h3>Step 5: Implement Rollback</h3>
+    <p>If a misconfiguration occurs, revert firewall settings.</p>
+    <h4>Rollback Playbook: firewall_rollback.yml</h4>
+    <pre><code>---
+- name: Rollback Firewall Configuration
+  hosts: firewall_servers
+  become: yes
+  tasks:
+    - name: Reset UFW
+      command: ufw reset
+      when: ansible_os_family == "Debian"
+    
+    - name: Disable Firewalld
+      command: systemctl stop firewalld
+      when: ansible_os_family == "RedHat"
+</code></pre>
+    
+    <h3>Run Rollback Playbook</h3>
+    <pre><code>ansible-playbook -i inventory firewall_rollback.yml</code></pre>
+    
+    <h2>Project Deliverables</h2>
+    <ul>
+        <li><strong>Ansible Inventory File</strong></li>
+        <li><strong>Firewall Setup Playbook</strong> (`firewall_setup.yml`)</li>
+        <li><strong>Rollback Playbook</strong> (`firewall_rollback.yml`)</li>
+        <li><strong>Documentation & README</strong></li>
+    </ul>
+    
+    <h2>Conclusion</h2>
+    <p>This project provides an automated, scalable, and secure solution for firewall management using Ansible. It ensures that firewall rules are consistently applied across multiple servers while offering logging, monitoring, and rollback mechanisms.</p>
+    
+    <h2>Next Steps</h2>
+    <ul>
+        <li>Integrate with CI/CD pipelines to enforce firewall rules as part of infrastructure deployment.</li>
+        <li>Expand support for additional firewall services like <strong>iptables</strong>.</li>
+        <li>Implement alerting mechanisms using <strong>Prometheus & Grafana</strong> for blocked network traffic.</li>
+    </ul>
+</body>
+</html>
