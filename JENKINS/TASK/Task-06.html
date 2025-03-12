@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Project: Dockerized Jenkins Setup with Persistent Volumes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #222;
+        }
+        code {
+            background-color: #ddd;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        pre {
+            background: #222;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1> Dockerized Jenkins Setup with Persistent Volumes</h1>
+
+    <p>This task aims to set up a <strong>Jenkins instance running inside a Docker container</strong> while ensuring data persistence using <strong>Docker volumes</strong>. The setup will also include <strong>basic security configurations</strong>, <strong>port mappings</strong>, and <strong>plugin installations</strong> to prepare Jenkins for use in a CI/CD pipeline.</p>
+
+    <h2>Task Architecture</h2>
+    <h3>Technologies Used:</h3>
+    <ul>
+        <li><strong>Docker</strong> – To containerize Jenkins</li>
+        <li><strong>Docker Compose</strong> – To manage the multi-container setup</li>
+        <li><strong>Jenkins</strong> – Automation server</li>
+        <li><strong>Persistent Volumes</strong> – To retain Jenkins job and configuration data</li>
+        <li><strong>Nginx (Optional)</strong> – As a reverse proxy for Jenkins</li>
+        <li><strong>Host Machine</strong> – Linux (Ubuntu) or any Docker-supported OS</li>
+    </ul>
+
+    <h2>Step-by-Step Implementation</h2>
+
+    <h3>Step 1: Install Required Dependencies</h3>
+    <p>Ensure that <strong>Docker</strong> and <strong>Docker Compose</strong> are installed on your system.</p>
+
+    <h4>Install Docker</h4>
+    <pre><code>sudo apt update
+sudo apt install -y docker.io</code></pre>
+
+    <h4>Enable Docker Service</h4>
+    <pre><code>sudo systemctl enable docker
+sudo systemctl start docker</code></pre>
+
+    <h4>Install Docker Compose</h4>
+    <pre><code>sudo apt install -y docker-compose</code></pre>
+
+    <h4>Verify Installation</h4>
+    <pre><code>docker --version
+docker-compose --version</code></pre>
+
+    <h3>Step 2: Create a Persistent Volume for Jenkins</h3>
+    <p>Jenkins stores job data, configuration, and plugins in <code>/var/jenkins_home</code>. To ensure persistence, create a <strong>Docker volume</strong>:</p>
+
+    <pre><code>docker volume create jenkins_data</code></pre>
+
+    <p>To check the created volume:</p>
+    <pre><code>docker volume ls</code></pre>
+
+    <h3>Step 3: Create a Docker Network (Optional)</h3>
+    <p>For better communication between services (e.g., if using a reverse proxy):</p>
+    <pre><code>docker network create jenkins_network</code></pre>
+
+    <h3>Step 4: Create a Docker Compose File</h3>
+    <p>Create a directory for Jenkins and navigate into it:</p>
+    <pre><code>mkdir -p ~/jenkins-docker && cd ~/jenkins-docker
+touch docker-compose.yml</code></pre>
+    <p>Create a <pre>docker-compose.yml</pre> file:</p>
+    <pre><code>touch docker-compose.yml
+</code></pre>
+  
+    <p>Edit the file and add the following configuration:</p> 
+    <pre><code>version: '3.8'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins_server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - JENKINS_OPTS=--prefix=/jenkins
+    networks:
+      - jenkins_network
+
+volumes:
+  jenkins_data:
+
+networks:
+  jenkins_network:
+    driver: bridge
+</code></pre>
+  
+    <h4>Explanation:</h4>
+    <ul>
+      <li>The <pre>jenkins/jenkins:lts</pre> image is used (latest stable version).</li>
+      <li><strong>Persistent volume</strong> <pre>(jenkins_data)</pre> ensures data is not lost when restarting the container.</li>
+      <li><strong>Port mapping</strong> <pre>(8080:8080</pre> for UI and <pre>50000:50000</pre> for agent communication).</li>
+      <li><strong>Mounting Docker socket</strong> allows Jenkins to run Docker commands inside jobs.</li>
+      <li><strong>Disables the setup wizard</strong> by setting <pre>JAVA_OPTS</pre> (optional).</li>
+      <li><strong>Custom Jenkins URL prefix</strong> <pre>(/jenkins)</pre> for better reverse proxy handling.</li>
+    </ul>
+  
+    <h3>Step 5: Start Jenkins</h3>
+    <p>Run the following command to start Jenkins:</p>
+    <pre><code>docker-compose up -d</code></pre>
+    <p>To check if the container is running:</p>
+    <pre><code>docker ps</code></pre>
+    <p>If you need logs:</p>
+    <pre><code>docker logs -f jenkins_server</code></pre>
+    
+    <h3>Step 6: Retrieve Initial Admin Password</h3>
+    <p>Jenkins requires an initial admin password when accessed for the first time.</p>
+    <p>Run:</p>
+    <pre><code>docker exec -it jenkins_server cat /var/jenkins_home/secrets/initialAdminPassword</code></pre>
+    <p>Copy this password and <strong>paste it when prompted in the Jenkins UI.</strong></p>
+    
+    <h3>Step 7: Install Suggested Plugins</h3>
+    <ol>
+      <li>Open a browser and go to: <pre>http://<server-ip>:8080/jenkins</pre></li>
+      <li>Enter the <strong>initial admin password.</strong></li>
+      <li>Select <strong>Install Suggested Plugins.</strong></li>
+      <li>Create an <strong>admin user</strong> when prompted.</li>
+      <li>Finish the setup.</li>
+    </ol>
+   
+    <h3>Step 8: Install Required Jenkins Plugins</h3>
+    <p>Navigate to <strong>Manage Jenkins → Plugin Manager → Available Plugins</strong> and install:</p>
+    <ul>
+        <li><strong>Docker Pipeline</strong></li>
+        <li><strong>Git Plugin</strong></li>
+        <li><strong>Pipeline Plugin</strong></li>
+        <li><strong>Blue Ocean</strong></li>
+        <li><strong>Job DSL</strong></li>
+    </ul>
+
+    <h3>Step 9: Secure Jenkins</h3>
+    <ol>
+      <li><strong>Disable Anonymous Access:</strong>
+        <ul>
+          <li>Go to Manage Jenkins → Configure Global Security.</li>
+          <li>Select Enable Security.</li>
+          <li>Choose Jenkins' own user database.</li>
+          <li>Disable Allow users to sign up.</li>
+          <li>Set Matrix-based security or Role-based access control.</li>
+        </ul>
+      </li>
+      <li><strong>Install and Configure Reverse Proxy (Optional)</strong>
+        <ul>
+          <li>Use Nginx as a reverse proxy for added security.</li>
+          <li>Ensure Jenkins is accessible only via HTTPS.</li>
+        </ul>
+      </li>
+    </ol>
+    <h3>Step 10: Automate Dockerized CI/CD Pipeline</h3>
+    <ol>
+      <li>Create a New Pipeline Job:
+        <ul>
+          <li>Go to New Item → Pipeline.</li>
+          <li>Define the Jenkinsfile for CI/CD automation.</li>
+        </ul>
+      </li>
+      <li>Example Jenkinsfile (Pipeline as Code)</li>
+      <p>Create a file named Jenkinsfile in your repository:</p>
+    </ol>
+    <pre><code>pipeline {
+    agent {
+        docker {
+            image 'maven:3.8.1'
+        }
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/your-repo/sample-app.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        stage('Docker Build & Push') {
+            steps {
+                sh '''
+                docker build -t your-dockerhub-user/sample-app .
+                docker login -u your-dockerhub-user -p your-password
+                docker push your-dockerhub-user/sample-app
+                '''
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'docker run -d -p 8081:8080 your-dockerhub-user/sample-app'
+            }
+        }
+    }
+}</code></pre>
+
+    <h3>Step 11: Run the CI/CD Pipeline</h3>
+    <ul>
+      <li>Trigger the pipeline manually or via <strong>webhook</strong> from GitHub.</li>
+      <li>Jenkins will:
+        <ol>
+          <li>Pull the latest code.</li>
+          <li>Build & test the application.</li>
+          <li>Build and push a Docker image.</li>
+          <li>Deploy the image to a container.</li>
+        </ol>
+      </li>
+    </ul>
+    <h2>Conclusion</h2>
+    <p>You have now successfully set up Jenkins in a Docker container with persistent storage. This setup ensures that:</p>
+    <ul>
+      <Li>Jenkins data is not lost after container restarts.</Li>
+      <Li>The server can manage Docker-based CI/CD pipelines.</Li>
+      <Li>The environment is secure with access control.</Li>
+      
+    </ul>
+
+    <h2>Next Steps:</h2>
+    <ul>
+        <li>Integrate GitHub webhooks to trigger builds automatically..</li>
+        <li>Deploy to Kubernetes (EKS) instead of a standalone container..</li>
+        <li>Add Ansible or Terraform for infrastructure automation.</li>
+    </ul>
+</div>
+
+</body>
+</html>
+
