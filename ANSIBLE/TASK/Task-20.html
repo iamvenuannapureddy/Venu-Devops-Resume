@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Dynamic Inventory Management for Cloud Providers</title>
+</head>
+<body>
+    <h1> Dynamic Inventory Management for Cloud Providers</h1>
+    
+    <h2>Task Overview</h2>
+    <p>Dynamic inventory management is essential for DevOps teams managing cloud infrastructure at scale. 
+      This task focuses on integrating dynamic inventory scripts with Ansible for cloud providers (AWS EC2, Azure) 
+      to automate inventory updates, resource tagging, and grouping based on metadata. 
+      The implementation will ensure that inventory is always up to date, reducing manual overhead and improving efficiency in cloud infrastructure management.</p>
+    
+    <h2>Key Objectives</h2>
+    <ul>
+        <li>Implement <strong>Ansible Dynamic Inventory</strong> for AWS and Azure.</li>
+        <li>Automate <strong>resource discovery</strong> and <strong>grouping</strong> using metadata.</li>
+        <li>Utilize <strong>tags</strong> to categorize and manage cloud resources.</li>
+        <li>Enable <strong>auto-scaling support</strong> with dynamic inventory updates.</li>
+        <li>Integrate with <strong>Jenkins for CI/CD pipelines</strong>.</li>
+        <li>Store <strong>inventory data in a central location</strong> for logging and monitoring.</li>
+    </ul>
+    
+    <h2>Architecture Diagram</h2>
+    <p>The high-level architecture consists of:</p>
+    <ol>
+        <li><strong>Cloud Providers:</strong> AWS and Azure</li>
+        <li><strong>Ansible Dynamic Inventory Plugin</strong></li>
+        <li><strong>Tagging and Grouping Automation</strong></li>
+        <li><strong>Integration with Jenkins</strong></li>
+        <li><strong>Logging and Monitoring using Prometheus & Grafana</strong></li>
+    </ol>
+    
+    <h2>Technology Stack</h2>
+    <ul>
+        <li><strong>Cloud:</strong> AWS (EC2, IAM, S3), Azure (VMs, Resource Groups)</li>
+        <li><strong>Configuration Management:</strong> Ansible</li>
+        <li><strong>Scripting & Automation:</strong> Python, Bash</li>
+        <li><strong>Version Control:</strong> GitHub/GitLab</li>
+        <li><strong>CI/CD:</strong> Jenkins</li>
+        <li><strong>Monitoring:</strong> Prometheus, Grafana</li>
+        <li><strong>Logging:</strong> ELK Stack (Elasticsearch, Logstash, Kibana)</li>
+    </ul>
+    
+    <h2>Implementation Steps</h2>
+    
+    <h3>1. Infrastructure Setup</h3>
+    <h4>AWS Setup</h4>
+    <ul>
+        <li>Create EC2 instances with required tags.</li>
+        <li>Set up IAM roles and policies for Ansible access.</li>
+        <li>Enable AWS CLI with programmatic access.</li>
+    </ul>
+    
+    <h4>Azure Setup</h4>
+    <ul>
+        <li>Create Azure VMs in different resource groups.</li>
+        <li>Assign Azure Managed Identity for authentication.</li>
+        <li>Install Azure CLI for inventory management.</li>
+    </ul>
+    
+    <h3>2. Configure Ansible Dynamic Inventory</h3>
+    <p>Install <strong>Ansible inventory plugins</strong>:</p>
+    <pre>
+        ansible-galaxy collection install amazon.aws
+        ansible-galaxy collection install azure.azcollection
+    </pre>
+    
+    <h4>AWS Dynamic Inventory Configuration (aws_inventory.yaml)</h4>
+    <pre>
+plugin: amazon.aws.aws_ec2
+regions:
+  - us-east-1
+  - us-west-1
+filters:
+  tag:Environment: production
+keyed_groups:
+  - key: tags.Name
+    prefix: tag_
+  - key: instance_type
+    prefix: type_
+    </pre>
+    
+    <h4>Azure Dynamic Inventory Configuration (azure_inventory.yaml)</h4>
+    <pre>
+plugin: azure.azcollection.azure_rm
+auth_source: auto
+keyed_groups:
+  - key: tags.Environment
+    prefix: env_
+  - key: location
+    prefix: region_
+    </pre>
+    
+    <p>Test dynamic inventory:</p>
+    <pre>
+        ansible-inventory -i aws_inventory.yaml --graph
+        ansible-inventory -i azure_inventory.yaml --graph
+    </pre>
+    
+    <h3>3. Automate Tagging and Grouping</h3>
+    <h4>AWS Tagging Script (Python)</h4>
+    <pre>
+import boto3
+
+ec2 = boto3.client('ec2')
+instances = ec2.describe_instances()
+for reservation in instances['Reservations']:
+    for instance in reservation['Instances']:
+        instance_id = instance['InstanceId']
+        ec2.create_tags(
+            Resources=[instance_id],
+            Tags=[{'Key': 'Environment', 'Value': 'Production'}]
+        )
+    </pre>
+    
+    <h4>Azure Resource Tagging</h4>
+    <pre>
+        az resource tag --resource-group myResourceGroup --tags Environment=Production
+    </pre>
+    
+    <h3>4. Integrate with Jenkins</h3>
+    <p>Create <strong>Jenkins Pipeline for Inventory Updates:</strong></p>
+    <pre>
+pipeline {
+    agent any
+    stages {
+        stage('Fetch AWS Inventory') {
+            steps {
+                sh 'ansible-inventory -i aws_inventory.yaml --graph'
+            }
+        }
+        stage('Fetch Azure Inventory') {
+            steps {
+                sh 'ansible-inventory -i azure_inventory.yaml --graph'
+            }
+        }
+        stage('Deploy Playbook') {
+            steps {
+                sh 'ansible-playbook -i aws_inventory.yaml deploy.yml'
+            }
+        }
+    }
+}
+    </pre>
+    
+    <h3>5. Logging & Monitoring</h3>
+    <ul>
+        <li>Enable CloudWatch Logs for AWS inventory</li>
+        <li>Send logs to ELK stack for better visualization</li>
+        <li>Use Prometheus & Grafana for monitoring Ansible runs</li>
+    </ul>
+    
+    <h2>Expected Outcomes</h2>
+    <ul>
+        <li>✅ <strong>Real-time inventory updates</strong> across AWS and Azure</li>
+        <li>✅ <strong>Automated resource grouping</strong> based on tags</li>
+        <li>✅ <strong>Seamless integration</strong> with Jenkins for CI/CD</li>
+        <li>✅ <strong>Reduced manual effort</strong> in managing infrastructure</li>
+    </ul>
+    
+    <h2>Next Steps</h2>
+    <ul>
+        <li>🔹 Extend support for <strong>Google Cloud Platform (GCP)</strong></li>
+        <li>🔹 Add <strong>Slack or Email notifications</strong> for inventory changes</li>
+        <li>🔹 Implement <strong>auto-scaling triggers</strong> based on dynamic inventory</li>
+    </ul>
+  
+    <p>This project provides a scalable solution for dynamic inventory management, making cloud infrastructure more manageable and efficient.</p>
+</body>
+</html>
