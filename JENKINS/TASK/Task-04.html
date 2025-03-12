@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Parameterized Build Pipeline in Jenkins</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: "Courier New", monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>End-to-End Parameterized Build Pipeline in Jenkins</h1>
+    
+    <h2>Task Overview</h2>
+    <p>The goal of this task is to implement a <strong>Jenkins CI/CD pipeline</strong> that allows users to specify environment parameters before triggering a build. The pipeline will dynamically deploy an application to the specified environment (<strong>dev, staging, or prod</strong>) using <strong>Docker, Kubernetes (EKS), Terraform, and Ansible</strong> for automation.</p>
+    
+    <h2>Technology Stack</h2>
+    <ul>
+        <li><strong>Jenkins</strong> – CI/CD automation</li>
+        <li><strong>GitHub</strong> – Source code repository</li>
+        <li><strong>Terraform</strong> – Infrastructure provisioning</li>
+        <li><strong>Ansible</strong> – Configuration management</li>
+        <li><strong>Docker & Docker Hub</strong> – Containerization & Image repository</li>
+        <li><strong>Kubernetes (EKS)</strong> – Orchestrating containerized applications</li>
+        <li><strong>AWS Services</strong> – EKS, S3, IAM, VPC, Route 53, RDS</li>
+        <li><strong>SonarQube</strong> – Code quality checks</li>
+        <li><strong>Nexus</strong> – Artifact repository</li>
+        <li><strong>Slack</strong> – Notification integration</li>
+    </ul>
+    
+    <h2>Pipeline Flow</h2>
+    <ol>
+        <li><strong>Developer Pushes Code</strong> → GitHub</li>
+        <li><strong>Jenkins Triggers Build</strong> (Based on Parameter)</li>
+        <li><strong>Code Quality Check</strong> → SonarQube</li>
+        <li><strong>Build & Package Application</strong> → Maven/Docker</li>
+        <li><strong>Push Artifacts</strong> → Nexus/Docker Hub</li>
+        <li><strong>Deploy to Kubernetes (EKS)</strong> → Terraform & Ansible</li>
+        <li><strong>Notify Team</strong> → Slack</li>
+    </ol>
+    
+    <h2>Step-by-Step Implementation</h2>
+    <h3>Step 1: Set Up Jenkins with Parameterized Build</h3>
+    <p>Install necessary Jenkins plugins:</p>
+    <ul>
+        <li><strong>Pipeline</strong></li>
+        <li><strong>Git</strong></li>
+        <li><strong>SonarQube Scanner</strong></li>
+        <li><strong>Parameterized Build Plugin</strong></li>
+        <li><strong>AWS Credentials Plugin</strong></li>
+        <li><strong>Kubernetes CLI</strong></li>
+        <li><strong>Slack Notifications</strong></li>
+    </ul>
+    <p>Create a <strong>New Jenkins Pipeline Job</strong> and add the following parameter:</p>
+    <p>ENVIRONMENT (Choice Parameter: dev, staging, prod)</p>
+    
+    <h3>Step 2: Define the Jenkins Pipeline</h3>
+    <p>Create a Jenkinsfile in the root of your project:</p>
+    <pre><code>pipeline {
+    agent any
+
+    parameters {
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'staging', 'prod'], description: 'Choose Deployment Environment')
+    }
+
+    environment {
+        DOCKER_IMAGE = "your-dockerhub-repo/app:${BUILD_NUMBER}"
+        KUBE_CONFIG = "/path/to/kube/config"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-repo.git'
+            }
+        }
+
+        stage('Code Quality Check') {
+            steps {
+                script {
+                    sh 'sonar-scanner -Dsonar.projectKey=your-project -Dsonar.host.url=http://sonarqube:9000'
+                }
+            }
+        }
+
+        stage('Build Application') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Build & Push Docker Image') {
+            steps {
+                script {
+                    sh """
+                    docker build -t $DOCKER_IMAGE .
+                    docker login -u $DOCKER_USER -p $DOCKER_PASS
+                    docker push $DOCKER_IMAGE
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    sh """
+                    kubectl --kubeconfig=$KUBE_CONFIG apply -f k8s/deployment-${params.ENVIRONMENT}.yaml
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            slackSend channel: '#deployments', message: "Deployment to ${params.ENVIRONMENT} successful"
+        }
+        failure {
+            slackSend channel: '#deployments', message: "Deployment to ${params.ENVIRONMENT} failed"
+        }
+    }
+}</code></pre>
+    
+    <h3>Step 3: Set Up Kubernetes Manifests</h3>
+    <p>Create different deployment files for <strong>dev, staging, and prod</strong> in the <code>k8s/</code> directory.</p>
+    <h4>Deployment for Dev (k8s/deployment-dev.yaml)</h4>
+    <pre>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-dev
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: your-dockerhub-repo/app:latest
+        ports:
+        - containerPort: 8080
+</pre>
+    <p>Repeat the same for staging and prod, but change:</p>
+    <ul>
+      <li>replicas: Increase for higher environments</li>
+      <li>imagePullPolicy: Always pull for staging/prod</li>
+    </ul>
+    <h3>Step 4: Provision Infrastructure with Terraform</h3>
+    <p>Create an <code>eks-cluster.tf</code> for setting up an AWS EKS cluster.</p>
+    <pre><code>provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_eks_cluster" "eks_cluster" {
+  name     = "eks-${var.environment}"
+  role_arn = aws_iam_role.eks_role.arn
+  vpc_config {
+    subnet_ids = var.subnet_ids
+  }
+}
+</code></pre>
+    <p>Deploy EKS based on environment:</p>
+    <pre>terraform init
+terraform apply -var="environment=dev"
+</pre>
+  
+    <h3>Step 5: Automate Configuration with Ansible</h3>
+    <p>Use Ansible to configure Kubernetes and deploy applications.</p>
+    <p>Create <code>deploy-app.yaml:</code></p>
+    <pre>- hosts: localhost
+  tasks:
+    - name: Apply Kubernetes Deployment
+      command: kubectl apply -f k8s/deployment-{{ ENVIRONMENT }}.yaml
+</pre>
+    <p>Run Ansible:</p>
+    <pre>ansible-playbook -e "ENVIRONMENT=dev" deploy-app.yaml
+</pre>
+  
+    <h3>Step 6: Configure Slack Notifications</h3>
+    <ul>
+      <li> Install the Slack Plugin in Jenkins</li>
+      <li>Configure Slack Webhook</li>
+      <li>Add slackSend in the Jenkinsfile to send success/failure messages.</li> 
+    </ul>
+    
+    <h2>Final Project Structure</h2>
+    <pre><code>├── Jenkinsfile
+├── terraform/
+│   ├── eks-cluster.tf
+├── ansible/
+│   ├── deploy-app.yaml
+├── k8s/
+│   ├── deployment-dev.yaml
+│   ├── deployment-staging.yaml
+│   ├── deployment-prod.yaml
+├── src/
+├── Dockerfile
+├── pom.xml
+├── README.md</code></pre>
+
+    <h2>Deployment Process</h2>
+    <ol>
+      <li><strong>Trigger a Jenkins Build,</strong> selecting the environment (dev, staging, or prod).</strong></li>
+      <li><strong>Jenkins runs the pipeline,</strong> building the app and pushing Docker images.</li>
+      <li><strong>Terraform provisions</strong> infrastructure if not already deployed.</li>
+      <li><strong>Ansible automates</strong> deployment using Kubernetes.</li>
+      <li><strong>Slack Notifies</strong> the team of deployment status.</li>
+    </ol>
+    
+    <h2>Conclusion</h2>
+    <p>This project demonstrates end-to-end automation for deploying an application across multiple environments using a parameterized Jenkins pipeline. 
+      By leveraging Terraform, Ansible, Docker, and Kubernetes, we ensure a scalable, automated, and efficient CI/CD pipeline.</p>
+</body>
+</html>
+
