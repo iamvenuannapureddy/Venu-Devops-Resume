@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Database Server Configuration Task</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background: #eee;
+            padding: 10px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            background: #ddd;
+            padding: 2px 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>End-to-End Database Server Configuration Task</h1>
+    <p>This Task automates the installation and configuration of <strong>MySQL</strong> or <strong>PostgreSQL</strong> using <strong>Terraform and Ansible</strong>. It sets up the database server on an AWS EC2 instance, provisions necessary resources, and configures the database with users and permissions.</p>
+    
+    <h2>📌 Task Overview</h2>
+    <h3>1️⃣ Goals</h3>
+    <ul>
+        <li>✅ Automate database server setup (MySQL/PostgreSQL)</li>
+        <li>✅ Provision infrastructure using Terraform</li>
+        <li>✅ Configure the database using Ansible</li>
+        <li>✅ Create databases, users, and assign permissions</li>
+        <li>✅ Ensure high availability and security</li>
+    </ul>
+    <h2>Task Workflow</h2>
+    <h3>1. Infrastructure Provisioning with Terraform</h3>
+    <ul>
+        <li>Define an <strong>AWS EC2 instance</strong> (Amazon Linux 2 / Ubuntu).</li>
+        <li>Attach an <strong>Elastic IP</strong> for stability.</li>
+        <li>Set up <strong>Security Groups</strong> to allow only necessary access.</li>
+        <li>Create an <strong>RDS instance</strong> (optional) if managing DB externally.</li>
+        <li>Use <strong>IAM Roles and Policies</strong> for secure access.</li>
+    </ul>
+
+    <h3>2. Database Installation and Configuration using Ansible</h3>
+    <ul>
+        <li>Install required <strong>system dependencies</strong>.</li>
+        <li>Install <strong>MySQL or PostgreSQL</strong> based on configuration.</li>
+        <li>Configure <strong>database parameters</strong> (e.g., memory limits, connection settings).</li>
+        <li>Secure the installation (disable remote root login, set strong passwords).</li>
+        <li>Enable and start the database service.</li>
+    </ul>
+
+    <h3>3. Database & User Creation</h3>
+    <ul>
+        <li>Create a <strong>new database</strong>.</li>
+        <li>Create a <strong>database user</strong> and assign permissions.</li>
+        <li>Grant <strong>privileges</strong> for secure access.</li>
+    </ul>
+    
+    <h3>4. Security & Access Control</h3>
+    <ul>
+        <li>Configure <strong>firewall rules</strong> to allow access only from authorized IPs.</li>
+        <li>Set up <strong>TLS encryption</strong> for secure connections.</li>
+        <li>Enable <strong>automatic backups</strong> and <strong>logging</strong>.</li>
+    </ul>
+
+    <h3>5. Testing and Validation</h3>
+    <ul>
+        <li>Verify that MySQL/PostgreSQL is installed and running.</li>
+        <li>Test database connectivity from an application or client.</li>
+        <li>Ensure users and permissions are correctly configured.</li>
+        <li>Validate security configurations.</li>
+    </ul>
+
+    <h3>6. Monitoring and Logging Setup</h3>
+    <ul>
+        <li>Enable <strong>AWS CloudWatch Logs</strong> for database auditing.</li>
+        <li>Set up <strong>Prometheus and Grafana</strong> for monitoring.</li>
+        <li>Configure alerts for <strong>CPU, memory, storage, and connection metrics</strong>.</li>
+    </ul>
+
+    <h2>🔧 Tools & Technologies</h2>
+    <ul>
+        <li><strong>Terraform</strong> → Infrastructure provisioning</li>
+        <li><strong>Ansible</strong> → Configuration management</li>
+        <li><strong>AWS</strong> → EC2, Security Groups, IAM, RDS (optional)</li>
+        <li><strong>GitHub/GitLab</strong> → Version control</li>
+        <li><strong>Jenkins</strong> (optional) → CI/CD for automation</li>
+    </ul>
+    
+    <h2>📂 Task Structure</h2>
+    <pre>
+├── terraform/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── terraform.tfvars
+│   └── provider.tf
+├── ansible/
+│   ├── inventory.ini
+│   ├── playbook.yml
+│   ├── roles/
+│   │   ├── db_install/
+│   │   │   ├── tasks/main.yml
+│   │   │   ├── handlers/main.yml
+│   │   │   ├── templates/
+│   │   │   ├── files/
+│   │   │   └── vars/main.yml
+│   │   ├── db_config/
+│   │   │   ├── tasks/main.yml
+│   │   │   ├── handlers/main.yml
+│   │   │   ├── templates/
+│   │   │   ├── files/
+│   │   │   └── vars/main.yml
+└── README.md
+    </pre>
+    
+    <h2>🔹 Implementation Steps</h2>
+    <h3>Step 1️⃣: Terraform - Provision Infrastructure</h3>
+    <p>Use Terraform to:</p>
+    <ul>
+        <li>Create an <strong>EC2 instance</strong> for the database server.</li>
+        <li>Attach a <strong>security group</strong> for DB access.</li>
+        <li>Optionally, use <strong>RDS</strong> for managed DB hosting.</li>
+    </ul>
+    
+    <h3>📌 Terraform Configuration (`main.tf`)</h3>
+    <pre><code>
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_instance" "db_server" {
+  ami           = "ami-12345678" # Ubuntu 20.04 LTS
+  instance_type = "t2.medium"
+  security_groups = [aws_security_group.db_sg.name]
+  key_name        = "db-key-pair"
+  tags = {
+    Name = "DatabaseServer"
+  }
+}
+
+resource "aws_security_group" "db_sg" {
+  name        = "db_security_group"
+  description = "Allow MySQL/PostgreSQL access"
+  ingress {
+    from_port   = 3306  # Use 5432 for PostgreSQL
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Restrict to known IPs
+  }
+}
+    </code></pre>
+    
+    <h3>Run Terraform:</h3>
+    <pre><code>terraform init
+terraform apply -auto-approve</code></pre>
+    
+    <h3>Step 2️⃣: Ansible - Install and Configure Database</h3>
+    <p>Once Terraform provisions the EC2 instance, Ansible is used for:</p>
+    <ul>
+        <li>Installing MySQL or PostgreSQL</li>
+        <li>Creating databases and users</li>
+        <li>Configuring permissions and settings</li>
+    </ul>
+  
+    <h3>📌 Ansible Inventory (inventory.ini)</h3>
+    <pre><code>[database]
+db_server ansible_host=<EC2_PUBLIC_IP> ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa
+</code></pre>
+  
+    <h3>📌 Ansible Playbook (`playbook.yml`)</h3>
+    <pre><code>
+- name: Configure Database Server
+  hosts: database
+  become: true
+  roles:
+    - db_install
+    - db_config
+    </code></pre>
+  
+    <h3>📌 Role 1: Install Database</h3>
+    <p>(roles/db_install/tasks/main.yml)</p>
+    <pre><code>- name: Install MySQL Server
+  apt:
+    name: mysql-server
+    state: present
+  when: "'mysql' in ansible_facts['distribution']"
+
+- name: Install PostgreSQL Server
+  apt:
+    name: postgresql
+    state: present
+  when: "'postgresql' in ansible_facts['distribution']"
+
+- name: Ensure MySQL is running
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+  when: "'mysql' in ansible_facts['distribution']"
+
+- name: Ensure PostgreSQL is running
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+  when: "'postgresql' in ansible_facts['distribution']"
+</code></pre>
+    
+    <h3>📌 Role 2: Configure Database</h3>
+    <pre><code>- name: Create Database
+  mysql_db:
+    name: my_database
+    state: present
+  when: "'mysql' in ansible_facts['distribution']"
+
+- name: Create PostgreSQL Database
+  postgresql_db:
+    name: my_database
+    state: present
+  when: "'postgresql' in ansible_facts['distribution']"
+
+- name: Create Database User
+  mysql_user:
+    name: db_user
+    password: db_pass
+    priv: "my_database.*:ALL"
+    host: "%"
+    state: present
+  when: "'mysql' in ansible_facts['distribution']"
+
+- name: Create PostgreSQL User
+  postgresql_user:
+    db: my_database
+    name: db_user
+    password: db_pass
+    state: present
+  when: "'postgresql' in ansible_facts['distribution']"
+</code></pre>
+  
+    <h4>👉 Run Ansible:</h4>
+  <pre><code>ansible-playbook -i inventory.ini playbook.yml
+</code></pre>
+    
+    <h3>Run Ansible:</h3>
+    <pre><code>ansible-playbook -i inventory.ini playbook.yml</code></pre>
+    
+    <h2>🔐 Security Best Practices</h2>
+    <ul>
+        <li>🔹 <strong>Restrict DB access</strong> to specific IPs</li>
+        <li>🔹 <strong>Use IAM roles</strong> for EC2 instead of hardcoded credentials</li>
+        <li>🔹 <strong>Enable backups</strong> (for RDS)</li>
+        <li>🔹 <strong>Use parameterized queries</strong> to prevent SQL injection</li>
+        <li>🔹 <strong>Set up monitoring</strong> using CloudWatch or Prometheus</li>
+    </ul>
+    <h2>🚀 Deployment Flows</h2>
+    <ul>
+        <li>🔹 <strong>Terraform </strong> provisions AWS resources</li>
+        <li>🔹 <strong>Ansible</strong> installs and configures the database</li>
+        <li>🔹 <strong>Users & permissionss</strong>are assigned</li>
+        <li>🔹 <strong>Security policiess</strong> are appliedon</li>
+        <li>🔹 <strong>Database is ready for use! </strong></li>
+    </ul>
+    <h2>📌 Expected Outputs</h2>
+    <ul>
+        <li>🔹 MySQL/PostgreSQL installed on EC2s</li>
+        <li>🔹 Database and user configured</li>
+        <li>🔹 Remote access enabled securely</li>
+        <li>🔹 Ready-to-use Terraform & Ansible scripts</li>
+    </ul>
+    
+    <h2>📜 Next Steps</h2>
+    <ul>
+        <li>🔹 Integrate <strong>CI/CD</strong> with Jenkins</li>
+        <li>🔹 Enable <strong>SSL/TLS encryption</strong></li>
+        <li>🔹 Automate backups using <strong>AWS Backup</strong></li>
+        <li>🔹 Set up <strong>Database Replication</strong> for HA</li>
+    </ul>
+    
+    <h2>📚 Summary</h2>
+    <p>This project provides an end-to-end automated database setup using <strong>Terraform</strong> (for infrastructure) and <strong>Ansible</strong> (for configuration). It installs either <strong>MySQL or PostgreSQL</strong>, creates <strong>databases, users, and permissions</strong>, and secures access.</p>
+</body>
+</html>
