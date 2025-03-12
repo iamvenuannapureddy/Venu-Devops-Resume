@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Multi-Branch Pipeline Project</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background: #eee;
+            padding: 10px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: monospace;
+            background: #ddd;
+            padding: 2px 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>End-to-End Multi-Branch Pipeline Project Using Jenkins, GitHub, Docker, AWS, and Terraform</h1>
+    
+    <h2>Project Overview</h2>
+    <p>The goal of this project is to implement a <strong>Multi-Branch Pipeline</strong> in Jenkins that automatically triggers builds for different branches (<code>main</code>, <code>dev</code>, and <code>feature/*</code>). Each branch will have a distinct build, test, and deployment process.</p>
+    
+    <h2>Technology Stack</h2>
+    <ul>
+        <li><strong>Source Code Management</strong>: GitHub</li>
+        <li><strong>CI/CD Tool</strong>: Jenkins (Multi-Branch Pipeline)</li>
+        <li><strong>Build Tool</strong>: Maven (for Java Application)</li>
+        <li><strong>Code Quality</strong>: SonarQube</li>
+        <li><strong>Artifact Repository</strong>: Nexus</li>
+        <li><strong>Containerization</strong>: Docker</li>
+        <li><strong>Orchestration</strong>: Kubernetes (Amazon EKS)</li>
+        <li><strong>Infrastructure as Code</strong>: Terraform</li>
+        <li><strong>Cloud Provider</strong>: AWS (EKS, S3, IAM, EC2, RDS, ALB)</li>
+        <li><strong>Notification</strong>: Slack</li>
+    </ul>
+    
+    <h2>Project Architecture</h2>
+    <ol>
+        <li><strong>Developers push code to GitHub</strong> on different branches (<code>main</code>, <code>dev</code>, <code>feature/*</code>).</li>
+        <li><strong>Jenkins Multi-Branch Pipeline</strong> detects branch changes and triggers the corresponding job.</li>
+        <li><strong>Pipeline Stages:</strong>
+            <ul>
+                <li><strong>Code Checkout</strong></li>
+                <li><strong>Static Code Analysis (SonarQube)</strong></li>
+                <li><strong>Build and Package (Maven)</strong></li>
+                <li><strong>Artifact Storage (Nexus)</strong></li>
+                <li><strong>Docker Image Creation</strong></li>
+                <li><strong>Docker Image Push (Docker Hub)</strong></li>
+                <li><strong>Deployment to Kubernetes (EKS)</strong></li>
+                <li><strong>Notification (Slack)</strong></li>
+            </ul>
+        </li>
+        <li><strong>Terraform provisions AWS infrastructure</strong> dynamically if required.</li>
+        <li><strong>Monitoring setup</strong> using Prometheus and Grafana.</li>
+    </ol>
+
+    <h2>Implementation Steps</h2>
+    <h3>1. Set Up GitHub Repository</h3>
+    <p>Create a repository with three branches: <code>main</code>, <code>dev</code>, and <code>feature/test-feature</code>. </p>
+    <p>Add a sample Java-based application along with a <code>Jenkinsfile</code> in each branch.</p>
+
+    <h3>2. Install and Configure Jenkins</h3>
+    <p>Install Jenkins on an EC2 instance (or use a containerized version).</p>
+    <p>Install necessary plugins</p>
+    <ul>
+        <li><strong>Pipeline</strong></li>
+        <li><strong>GitHub Branch Source Plugin</strong></li>
+        <li><strong>Docker Pipeline</strong></li>
+        <li><strong>SonarQube Scanner</strong></li>
+        <li><strong>Kubernetes Plugin</strong></li>
+        <li><strong>Slack Plugin</strong></li>
+    </ul>
+    <p>Configure <strong>Jenkins global credentials</strong> for:</p>
+    <ul>
+      <li>GitHub</li>
+      <li>Docker Hub</li>
+      <li>AWS IAM</li>
+      <li>SonarQube</li>
+      <li>Nexus</li>
+    </ul>
+    
+    <h3>3. Create a Multi-Branch Pipeline in Jenkins</h3>
+      <ul>
+        <li><strong>Go to Jenkins Dashboard → New Item → Multi-Branch Pipeline</strong></li>
+        <li><strong>Configure GitHub SCM:</strong>
+          <ul>
+            <li>Add the repository URL.</li>
+            <li>Set up <strong>Branch Discovery Strategy</strong> to detect main, dev, and feature/* branches.</li>
+            <li>Set <strong>Scan Repository Triggers</strong></ul> (e.g., every 5 minutes).</li>
+          </ul>
+        </li>
+      </ul>
+
+    <h3>4. Write Jenkinsfile for Multi-Branch Pipeline</h3>
+    <p>Each branch executes different steps based on the environment.</p>
+    <h4>Jenkinsfile for <code>main</code> branch (Production Deployment)</h4>
+    <pre><code>pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "yourdockerhub/image:${BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/yourrepo.git'
+            }
+        }
+
+        stage('Static Code Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        sh 'mvn clean verify sonar:sonar'
+                    }
+                }
+            }
+        }
+
+        stage('Build & Package') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Push Artifact to Nexus') {
+            steps {
+                sh 'mvn deploy'
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                sh "docker build -t ${DOCKER_IMAGE} ."
+                sh "docker login -u youruser -p yourpassword"
+                sh "docker push ${DOCKER_IMAGE}"
+            }
+        }
+
+        stage('Deploy to Kubernetes (EKS)') {
+            steps {
+                sh "kubectl apply -f k8s/deployment.yaml"
+            }
+        }
+    }
+
+    post {
+        success {
+            slackSend channel: '#deployments', message: "✅ Build Successful: ${env.JOB_NAME} - ${env.BUILD_NUMBER}"
+        }
+        failure {
+            slackSend channel: '#deployments', message: "❌ Build Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}"
+        }
+    }
+}
+</code></pre>
+
+    <h4>Jenkinsfile for <code>dev</code> branch (Staging Deployment)</h4>
+    <pre><code>
+      pipeline {
+    agent any
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'dev', url: 'https://github.com/yourrepo.git'
+            }
+        }
+
+        stage('Build & Unit Tests') {
+            steps {
+                sh 'mvn clean test'
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh "docker build -t yourdockerhub/dev-image:${BUILD_NUMBER} ."
+                sh "docker push yourdockerhub/dev-image:${BUILD_NUMBER}"
+            }
+        }
+
+        stage('Deploy to Staging') {
+            steps {
+                sh "kubectl apply -f k8s/dev-deployment.yaml"
+            }
+        }
+    }
+}
+  
+    </code></pre>
+
+    <h4>Jenkinsfile for <code>feature/*</code> branch (Testing)</h4>
+    <pre><code>pipeline {
+    agent any
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'feature/test-feature', url: 'https://github.com/yourrepo.git'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+    }
+}
+</code></pre>
+
+    <h3>5. Create Terraform Script for AWS Infrastructure</h3>
+    <ul>
+      <li>Define a Terraform script to provision AWS resources (VPC, EKS, RDS, ALB, S3, IAM).</li>
+      <li>Sample main.tf:</li>
+      <pre><code>provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_eks_cluster" "my_cluster" {
+  name     = "my-cluster"
+  role_arn = aws_iam_role.eks_role.arn
+}
+</code></pre>
+      <li>Run:</li>
+      <pre><code>terraform init
+terraform apply -auto-approve
+</code></pre>
+
+    <h3>6. Configure Kubernetes (EKS)</h3>
+      <ul>
+        <li>Deploy services using kubectl apply -f k8s/deployment.yaml</li>
+        <li>Create a LoadBalancer for access.</li>
+    </ul>
+
+    <h3>7. Monitoring Setup</h3>
+      <ul>
+        <li>Deploy Prometheus and Grafana on Kubernetes for monitoring.</li>
+        <li>Integrate with Jenkins to get pipeline metrics.</li>
+      </ul>
+
+    <h3>8. Notification Setup (Slack)</h3>
+      <ul>
+        <li>Configure Slack Webhook URL in Jenkins.</li>
+        <li>Send notifications based on build status.</li>
+      </ul>
+
+    <h2>Project Workflow</h2>
+      <ol>
+        <li>Developer pushes code to GitHub (main, dev, or feature/*).</li>
+        <li>Jenkins Multi-Branch Pipeline auto-triggers build.</li>
+        <li>Pipeline execution varies based on the branch:
+          <ul>
+            <li>feature/*: Runs unit tests.</li>
+            <li>dev: Deploys to a staging environment.</li>
+            <li>main: Deploys to production (AWS EKS).</li>
+          </ul>
+        </li>
+        <li>Terraform provisions AWS infrastructure dynamically.</li>
+        <li>Docker images are built and pushed to Docker Hub.</li>
+        <li>Deployment to Kubernetes (EKS) happens automatically.</li>
+        <li>Monitoring and notifications are handled via Slack, Prometheus, and Grafana.</li>
+      </ol>
+    <h2>Conclusion</h2>
+    <p>This project implements a Multi-Branch CI/CD pipeline with :</p>
+    <ul>
+      <li>✅ Jenkins Multi-Branch Pipeline</li>
+      <li>✅ Automated testing, security scanning, and deployment</li>
+      <li>✅ Containerized deployment with Kubernetes (EKS)</li>
+      <li>✅ Infrastructure automation with Terraform</li>
+      <li>✅ Slack notifications and monitoring integration</li>
+    </ul>
+
+</body>
+</html>
