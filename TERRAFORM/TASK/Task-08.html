@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terraform Infrastructure State Locking with Terraform Cloud or S3 Backend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 5px;
+            display: block;
+            white-space: pre-wrap;
+            border-left: 4px solid #3498db;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Terraform Infrastructure State Locking with Terraform Cloud or S3 Backend</h1>
+    
+    <h2>Task Overview</h2>
+    <p>This task focuses on setting up <strong>remote state management</strong> using either <strong>Terraform Cloud</strong> or an <strong>S3 backend with DynamoDB</strong> for state locking. It ensures that infrastructure state files are centrally managed, secure, and versioned to prevent conflicts during concurrent deployments.</p>
+    
+    <h2>Objectives</h2>
+    <ol>
+        <li>Store the Terraform state remotely in <strong>Terraform Cloud</strong> or <strong>AWS S3 backend</strong>.</li>
+        <li>Enable <strong>state locking</strong> to prevent conflicts in multi-user environments.</li>
+        <li>Implement <strong>state versioning</strong> to recover from accidental changes.</li>
+        <li>Secure Terraform secrets using <strong>AWS IAM roles and policies</strong>.</li>
+        <li>Automate Terraform deployments using a <strong>CI/CD pipeline</strong>.</li>
+    </ol>
+    
+    <h2>Task Architecture</h2>
+    <ul>
+        <li><strong>Terraform Cloud Option</strong></li>
+        <ul>
+            <li>Uses Terraform Cloud as the backend for state storage.</li>
+            <li>Provides built-in state locking and collaboration features.</li>
+        </ul>
+        <li><strong>S3 + DynamoDB Option</strong></li>
+        <ul>
+            <li>Stores state files in an <strong>S3 bucket</strong>.</li>
+            <li>Uses <strong>DynamoDB table</strong> for state locking to prevent race conditions.</li>
+        </ul>
+    </ul>
+    
+    <h2>Implementation Steps</h2>
+    <h3>Step 1: Setup Terraform Cloud or AWS S3 Backend</h3>
+    <h4>Option 1: Terraform Cloud Backend</h4>
+    <ol>
+        <li><strong>Sign up</strong> for a Terraform Cloud account.</li>
+        <li>Create a new <strong>Terraform Cloud workspace</strong>.</li>
+        <li>Update the Terraform configuration to use Terraform Cloud as the backend.</li>
+    
+    <pre><code>terraform {
+  cloud {
+    organization = "my-terraform-org"
+    workspaces {
+      name = "my-infra-workspace"
+    }
+  }
+}</code></pre>
+        <li><strong>Login to Terraform Cloud</strong> using the CLI:</li>
+        <pre><code>terraform login</code></pre>
+        <li>Initialize Terraform:</li>
+        <pre><code>terraform init</code></pre>
+    </ol>
+  
+    <h4>Option 2: S3 Backend with DynamoDB</h4>
+    <ol>
+        <li><strong>Create an S3 bucket</strong> for storing </li>
+        <p>Terraform state:</p>
+        <pre><code>aws s3 mb s3://my-terraform-state-bucket --region us-east-1</code></pre>
+        <li>Enable versioning on the S3 bucket:</li>
+        <pre><code>aws s3api put-bucket-versioning --bucket my-terraform-state-bucket --versioning-configuration Status=Enabled</code></pre>
+        <li>Create a DynamoDB table for state locking:</li>
+        <pre><code>aws dynamodb create-table \
+  --table-name terraform-lock \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST
+</code></pre>
+        <li>Update Terraform backend configuration:</li>
+        <pre><code>terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket"
+    key            = "terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "terraform-lock"
+  }
+}
+</code></pre>
+        <li>Initialize Terraform to configure the backend:</li>
+        <pre><code>terraform init
+</code></pre>
+        
+    </ol>
+  
+     <h3>Step 2: Define Infrastructure Resources</h3>
+      <p>Now that remote state management is set up, define Terraform configurations for AWS infrastructure:</p>
+      <p><strong>Example: Deploy an EC2 Instance</strong></p>
+      <pre><code>provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-12345678"
+  instance_type = "t2.micro"
+
+  tags = {
+    Name = "Terraform-EC2"
+  }
+}
+</code></pre>
+
+    <h3>Step 3: Implement IAM Policies for Secure Access</h3>
+    <ul>
+      <li>Create an IAM policy to grant Terraform read/write access to the S3 bucket and DynamoDB</li>
+      <pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::my-terraform-state-bucket",
+        "arn:aws:s3:::my-terraform-state-bucket/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem",
+        "dynamodb:GetItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Scan"
+      ],
+      "Resource": "arn:aws:dynamodb:us-east-1:123456789012:table/terraform-lock"
+    }
+  ]
+}
+</code></pre>
+      <li>Attach this policy to an IAM role used by Terraform.</li>
+    </ul>
+
+    <h3>Step 4: Apply Terraform Configuration</h3>
+      <ol>
+        <li>Plan the infrastructure:</li>
+        <pre><code>terraform plan</code></pre>
+        <li>Apply the configuration:</li>
+        <pre><code>terraform apply -auto-approve</code></pre>
+        <li>Verify the state locking by running</li>
+        <pre><code>terraform plan</code></pre>
+        <p>If another user tries to apply changes at the same time, Terraform will show a lock error.</p>
+      </ol>
+    <h3>Step 5: Enable CI/CD for Terraform</h3>
+      <ol>
+        <li>Use GitHub Actions, Jenkins, or GitLab CI/CD for Terraform automation.</li>
+        <li>Example GitHub Actions pipeline:</li>
+        <pre><code>name: Terraform CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve
+</code></pre>
+      </ol>
+
+    <h2>Project Validation</h2>
+    <h3>Testing State Locking</h3>
+    <ul>
+      <li>Run terraform apply from two terminals and observe the lock error.</li>
+      <li>Check DynamoDB table entries for lock records:</li>
+      <pre><code>aws dynamodb scan --table-name terraform-lock
+</code></pre>
+    </ul>
+
+    <h3>Testing Versioning</h3>
+    <ul>
+      <li>Modify the Terraform configuration and re-run terraform apply.</li>
+      <li>Restore an older state version from S3 if needed.</li>
+      
+    </ul>
+    <h2>Best Practices</h2>
+    <ul>
+        <li>Use <strong>Terraform Cloud for enterprise collaboration</strong>.</li>
+        <li>Enable <strong>S3 versioning</strong> for rollback support.</li>
+        <li>Use <strong>DynamoDB locking</strong> to prevent conflicts.</li>
+        <li>Store <strong>Terraform secrets</strong> in AWS Secrets Manager or Vault.</li>
+        <li>Automate Terraform deployment via <strong>CI/CD pipelines</strong>.</li>
+    </ul>
+    
+    <h2>Final Deliverables</h2>
+    <ul>
+        <li><strong>Terraform scripts</strong> for infrastructure provisioning.</li>
+        <li><strong>Remote state storage</strong> in Terraform Cloud or S3.</li>
+        <li><strong>State locking & versioning</strong> implemented.</li>
+        <li><strong>CI/CD pipeline</strong> to automate Terraform deployments.</li>
+    </ul>
+    
+    <h2>Next Steps</h2>
+    <ul>
+        <li>Extend the project to include <strong>RDS, ALB, and VPC networking</strong>.</li>
+        <li>Integrate <strong>security scanning</strong> using <code>tfsec</code>.</li>
+        <li>Deploy <strong>monitoring with AWS CloudWatch</strong>.</li>
+    </ul>
+    
+    <h2>Conclusion</h2>
+    <p>By implementing <strong>Terraform Cloud</strong> or <strong>S3 backend with DynamoDB</strong>, we ensure that the Terraform state is <strong>secure, locked, and versioned</strong>, preventing conflicts in multi-user environments. This setup enhances collaboration and stability in <strong>AWS infrastructure automation</strong>.</p>
+</body>
+</html>
