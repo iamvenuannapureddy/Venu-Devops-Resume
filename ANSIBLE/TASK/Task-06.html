@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Web Server Deployment Automation Project</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 5px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>End-to-End Web Server Deployment Automation </h1>
+
+    <h2>Task Objective</h2>
+    <p>The goal of this Task is to automate the deployment of a web server (Apache or Nginx) using <strong>Ansible</strong> and configure <strong>virtual hosts</strong> to serve a static website. The project ensures repeatability, scalability, and minimal manual intervention.</p>
+
+    <h2>Technology Stack</h2>
+    <ul>
+        <li><strong>Version Control</strong>: Git & GitHub</li>
+        <li><strong>Infrastructure as Code (IaC)</strong>: Terraform (for provisioning cloud infrastructure, optional)</li>
+        <li><strong>Configuration Management</strong>: Ansible</li>
+        <li><strong>Web Server</strong>: Apache/Nginx</li>
+        <li><strong>Operating System</strong>: Ubuntu 22.04 (or Amazon Linux 2)</li>
+        <li><strong>Cloud Provider</strong>: AWS (EC2 instances)</li>
+        <li><strong>Monitoring</strong>: Prometheus & Grafana (optional)</li>
+        <li><strong>CI/CD</strong>: Jenkins (to automate deployment, optional)</li>
+    </ul>
+
+    <h2>Task Workflow</h2>
+    <ol>
+        <li><strong>Provision Infrastructure</strong> (Optional - Using Terraform)</li>
+          <p>Create an EC2 instance in AWS for hosting the web server.</p>
+          <p>Configure security groups to allow HTTP/HTTPS traffic.</p>
+        <li><strong>Automate Web Server Setup</strong> (Using Ansible)</li>
+          <p>Install and configure Apache or Nginx.</p>
+          <p>Set up virtual hosts to host multiple websites.</p>
+          <p>Deploy a static website with proper permissions.</p>
+        <li><strong>Deploy the Static Website</strong></li>
+          <p>Clone the static website from GitHub.</p>
+          <p>Copy the website files to the appropriate directory.</p>
+          <p>Ensure the correct file permissions and SELinux policies (if applicable).</p>
+        <li><strong>Testing & Validation</strong></li>
+          <p>Verify the web server status.</p>
+          <p>Check if the website is accessible from the public domain/IP.</p>
+        <li><strong>Monitoring & Logging</strong> (Optional)</li>
+          <p>Integrate Prometheus and Grafana for monitoring.</p>
+          <p>Configure access logs for troubleshooting.</p>
+        <li><strong>CI/CD Pipeline</strong> (Optional)</li>
+          <p>Use Jenkins to automate website deployment whenever there are changes in the GitHub repository.</p>
+    </ol>
+
+    <h2>Step-by-Step Implementation</h2>
+
+    <h3>Step 1: Provision Infrastructure (Using Terraform)</h3>
+      <p>Create an EC2 instance with Terraform.</p>
+    <pre><code>provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_instance" "web" {
+  ami           = "ami-0c55b159cbfafe1f0"  # Ubuntu 22.04 LTS
+  instance_type = "t2.micro"
+  key_name      = "my-key"
+  
+  security_groups = ["web-server"]
+
+  tags = {
+    Name = "WebServer"
+  }
+}</code></pre>
+  <h3>Run the following commands to apply the Terraform configuration:</h3>
+    <pre><code>terraform init
+terraform apply -auto-approve
+</code></pre>
+
+    <h3>Step 2: Automate Web Server Setup (Using Ansible)</h3>
+      <p>Create an Ansible playbook to install and configure Apache or Nginx.</p>
+      <h4>Ansible Inventory File (hosts.ini)</h4>
+      <pre><code>[webserver]
+ec2-instance ansible_host=YOUR_EC2_PUBLIC_IP ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/my-key.pem
+</code></pre>
+  
+    <h4>Ansible Playbook (install_webserver.yml)</h4>
+    <pre><code>- name: Setup Web Server
+  hosts: webserver
+  become: yes
+  tasks:
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+        update_cache: yes
+
+    - name: Start and Enable Apache
+      service:
+        name: apache2
+        state: started
+        enabled: yes
+
+    - name: Copy Virtual Host Configuration
+      template:
+        src: vhost.conf.j2
+        dest: /etc/apache2/sites-available/000-default.conf
+      notify: Restart Apache
+
+    - name: Copy Website Files
+      copy:
+        src: website/
+        dest: /var/www/html/
+        owner: www-data
+        group: www-data
+        mode: "0755"
+
+  handlers:
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted</code></pre>
+      <h3>Run the playbook:</h3>
+  <pre><code>ansible-playbook -i hosts.ini install_webserver.yml
+</code></pre>
+
+    <h3>Step 3: Configure Virtual Hosts (Using Templates)</h3>
+      <h4>Virtual Host Template (vhost.conf.j2)</h4>
+    <pre><code>&lt;VirtualHost *:80&gt;
+    ServerAdmin admin@example.com
+    DocumentRoot /var/www/html
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+&lt;/VirtualHost&gt;</code></pre>
+
+    <h3>Step 4: Deploy Static Website</h3>
+      <p>Place your HTML, CSS, and JavaScript files inside an ansible/website/ directory.</p>
+      <h4>Example index.html:</h4>
+    <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;My Automated Web Server&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Welcome to My Web Server!&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+    <h4>Run the playbook again to deploy the website:</h4>
+    <pre><code>ansible-playbook -i hosts.ini install_webserver.yml
+</code></pre>
+
+    <h3>Step 5: Testing & Validation</h3>
+    <p>Get the public IP of your EC2 instance:</p>
+    <pre><code>curl http://&lt;YOUR_EC2_PUBLIC_IP&gt;</code></pre>
+    <p>You should see your static website displayed.</p>
+
+    <h3>Step 6: CI/CD Automation (Optional)</h3>
+      <p>To automate deployment on code changes, set up a Jenkins Pipeline:</p>
+      <h4>Jenkins Pipeline Script (Jenkinsfile)</h4>
+    <pre><code>pipeline {
+    agent any
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git 'https://github.com/your-repo/your-static-site.git'
+            }
+        }
+        stage('Deploy with Ansible') {
+            steps {
+                sh 'ansible-playbook -i hosts.ini install_webserver.yml'
+            }
+        }
+    }
+}</code></pre>
+
+    <h2>Project Deliverables</h2>
+    <ul>
+        <li>Terraform Files(main.tf, variables.tf, outputs.tf)</li>
+        <li>Ansible Playbooks</li>
+          <p>install_webserver.yml (Installs Apache/Nginx)</p>
+          <p>vhost.conf.j2 (Configures Virtual Host)</p>
+        <li>Static Website Files</li>
+          <p>index.html, style.css</p>
+        <li>Jenkins Pipeline (Optional)</li>
+    </ul>
+
+    <h2>Summary</h2>
+    <p>
+        ✔️ Provisioned EC2 instances using <strong>Terraform</strong><br>
+        ✔️ Automated Apache/Nginx installation using <strong>Ansible</strong><br>
+        ✔️ Configured <strong>Virtual Hosts</strong> for serving websites<br>
+        ✔️ Deployed a <strong>static website</strong> with automated updates<br>
+        ✔️ Integrated with <strong>CI/CD Pipeline (Jenkins, optional)</strong><br>
+    </p>
+
+    <p>This end-to-end project ensures a fully automated and scalable <strong>web server deployment</strong> suitable for production use. 🚀</p>
+</body>
+</html>
