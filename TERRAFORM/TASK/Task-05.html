@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPC Creation Project</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 5px;
+            display: block;
+            white-space: pre-wrap;
+            border-left: 4px solid #3498db;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1> VPC Creation with Public & Private Subnets, Internet Gateway, and Route Tables</h1>
+    
+    <h2>Task Overview</h2>
+    <p>In this task, we will create a <strong>Virtual Private Cloud (VPC)</strong> in AWS with the following components:</p>
+    <ul>
+        <li><strong>VPC:</strong> A custom VPC with a CIDR block.</li>
+        <li><strong>Subnets:</strong> Public and private subnets across multiple availability zones.</li>
+        <li><strong>Internet Gateway (IGW):</strong> To allow internet access for public subnets.</li>
+        <li><strong>Route Tables:</strong> Separate route tables for public and private subnets.</li>
+        <li><strong>Security Groups & NACLs:</strong> Basic security configurations.</li>
+    </ul>
+    
+    <h2>Architecture Diagram</h2>
+    <ul>
+        <li><strong>VPC:</strong> 10.0.0.0/16</li>
+        <li><strong>Public Subnets:</strong> 10.0.1.0/24 (AZ-1), 10.0.2.0/24 (AZ-2)</li>
+        <li><strong>Private Subnets:</strong> 10.0.3.0/24 (AZ-1), 10.0.4.0/24 (AZ-2)</li>
+        <li><strong>Internet Gateway:</strong> To enable outbound internet access for instances in public subnets.</li>
+        <li><strong>Route Tables:</strong>
+            <ul>
+                <li>Public Route Table: Routes traffic through <strong>Internet Gateway</strong></li>
+                <li>Private Route Table: Used for internal communication (no direct internet access)</li>
+            </ul>
+        </li>
+        <li><strong>NAT Gateway (optional):</strong> If private subnets need internet access for outbound requests.</li>
+    </ul>
+    
+    <h2>Implementation Steps</h2>
+    
+    <h3>Step 1: Create the VPC</h3>
+    <ol>
+        <li>Login to AWS Console</li>
+        <li>Navigate to <strong>VPC > Your VPCs > Create VPC</strong></li>
+        <li>Provide:
+            <ul>
+                <li><strong>Name:</strong> MyCustomVPC</li>
+                <li><strong>IPv4 CIDR Block:</strong> 10.0.0.0/16</li>
+                <li><strong>IPv6 CIDR Block:</strong> No IPv6 CIDR</li>
+                <li><strong>Tenancy:</strong> Default</li>
+            </ul>
+        </li>
+        <li>Click <strong>Create VPC</strong></li>
+    </ol>
+    
+    <h3>Step 2: Create Public & Private Subnets</h3>
+    <ol>
+        <li>Navigate to <strong>VPC > Subnets > Create Subnet</strong></li>
+        <li>Select <strong>MyCustomVPC</strong></li>
+        <li>Create two public subnets:
+            <ul>
+              <li>Subnet 1:
+                <ul>
+                    <li><strong>Name:</strong> Public-Subnet-1</li>
+                    <li><strong>CIDR:</strong> 10.0.1.0/24</li>
+                    <li><strong>Availability Zone:</strong> Select AZ-1</li>
+                </ul>
+              </li>
+              <li>Subnet 2:
+                <ul>
+                  <li>Name: Public-Subnet-2</li>
+                  <li>CIDR: 10.0.2.0/24</li>
+                  <li>Availability Zone: Select AZ-2</li>
+                </ul>
+              </li>
+            </ul>
+        </li>
+        <li>Create two private subnets:
+            <ul>
+              <li>Subnet 3:
+                <ul>
+                    <li><strong>Name:</strong> Public-Subnet-1</li>
+                    <li><strong>CIDR:</strong> 10.0.3.0/24</li>
+                    <li><strong>Availability Zone:</strong> Select AZ-1</li>
+                </ul>
+              </li>
+              <li>Subnet 4:
+                <ul>
+                  <li>Name: Public-Subnet-2</li>
+                  <li>CIDR: 10.0.4.0/24</li>
+                  <li>Availability Zone: Select AZ-2</li>
+                </ul>
+              </li>
+            </ul>
+        </li>
+        <li>Click <strong>Create Subnets</strong></li>
+    </ol>
+    
+    <h3>Step 3: Create & Attach Internet Gateway (IGW)</h3>
+    <ol>
+        <li>Navigate to <strong>VPC > Internet Gateways > Create Internet Gateway</strong></li>
+        <li>Provide:
+            <ul>
+                <li><strong>Name:</strong> MyInternetGateway</li>
+            </ul>
+        </li>
+        <li>Click <strong>Create</strong></li>
+        <li><strong>Attach IGW to VPC:</strong>
+            <ul>
+                <li>Select MyInternetGateway</li>
+                <li>Click <strong>Actions > Attach to VPC</strong></li>
+                <li>Choose <strong>MyCustomVPC</strong></li>
+                <li>Click <strong>Attach</strong></li>
+            </ul>
+        </li>
+    </ol>
+    
+    <h3>Step 4: Create Route Tables</h3>
+    <h4>4.1 Public Route Table</h4>
+    <ol>
+      <li>Navigate to VPC > Route Tables > Create Route Table
+      <li>Provide:
+        <ul>
+          <li>Name: <code>Public-Route-Table</code></li>
+          <li>VPC: <code>MyCustomVPC</code></li>
+        </ul>
+      </li>
+      <li>Click Create</li>
+      <li>Edit Routes:
+        <ul>
+          <li>Destination: <code>0.0.0.0/0</code></li>
+          <li>Target: Select <code>Internet Gateway (MyInternetGateway)</code></li>
+        </ul>
+      </li>
+      <li>Associate Public Subnets:
+        <ul>
+          <li>Go to Subnet Associations</li>
+          <li>Select <code>Public-Subnet-1</code> and <code>Public-Subnet-2</code></li>
+          <li>Click Save</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h4>4.2 Private Route Table</h4>
+    <ol>
+      <li>Navigate to VPC > Route Tables > Create Route Table
+      <li>Provide:
+        <ul>
+          <li>Name: <code>Private-Route-Table</code></li>
+          <li>VPC: <code>MyCustomVPC</code></li>
+        </ul>
+      </li>
+      <li>Click Create</li>
+      <li>Associate Private Subnets:
+        <ul>
+          <li>Go to Subnet Associations</li>
+          <li>Select <code>Private-Subnet-1</code> and <code>Private-Subnet-2</code></li>
+          <li>Click Save</li>
+        </ul>
+      </li>
+    </ol>
+  
+    <h3>Step 5: Create & Attach Security Groups</h3>
+    <ol>
+      <li>Navigate to VPC > Security Groups > Create Security Group</li>
+      <li>Public SG (for Public EC2 instances):
+        <ul>
+          <li>Name: Public-SG</li>
+          <li>VPC: MyCustomVPC</li>
+          <li>Inbound Rules:
+            <ul>
+              <li>Allow SSH (22) from 0.0.0.0/0</li>
+              <li>Allow HTTP (80), HTTPS (443) from 0.0.0.0/0</li>
+            </ul>
+          </li>
+          <li>Allow HTTP (80), HTTPS (443) from 0.0.0.0/0</li>
+        </ul>
+      </li>
+      <li>Private SG (for Private EC2 instances):
+        <ul>
+          <li>Name: Private-SG</li>
+          <li>Inbound Rules: Allow access only from Public-SG</li>
+          <li>Outbound Rules: Allow all traffic</li>
+        </ul>
+      </li>
+    </ol>
+    
+    <h3>Step 6: Create a NAT Gateway for Private Subnets (Optional)</h3>
+    <p>If private instances need internet access, use a NAT Gateway:.</p>
+    <ol>
+      <li>Navigate to VPC > NAT Gateways > Create NAT Gateway</li>
+      <li>Choose Public Subnet: Public-Subnet-1</li>
+      <li>Elastic IP: Allocate new EIP</li>
+      <li>Click Create</li>
+      <li>Modify Private Route Table:
+        <ul>
+          <li>Destination: 0.0.0.0/0</li>
+          <li>Target: Select NAT Gateway</li>
+        </ul>
+      </li>
+    </ol>
+    
+    <h3>Step 7: Deploy EC2 Instances for Testing</h3>
+    <ol>
+      <li>Navigate to EC2 > Instances > Launch Instance</li>
+      <li>Public Instance
+        <ul>
+          <li>AMI: Amazon Linux 2</li>
+          <li>Subnet: Public-Subnet-1</li>
+          <li>Security Group: Public-SG</li>
+          <li>Public IP: Enable</li>
+          <li>Key Pair: Create/download</li>
+        </ul>
+      </li>
+      <li>Private Instance
+        <ul>
+          <li>AMI: Amazon Linux 2</li>
+          <li>Subnet: Private-Subnet-1</li>
+          <li>Security Group: Private-SG</li>
+          <li>Public IP: Disable</li>
+        </ul>
+      </li>
+      <li>Test Connectivity:
+        <ul>
+          <li>Connect to Public EC2 using SSH.</li>
+          <li>From Public EC2, try SSH into Private EC2 using its private IP.</li> 
+        </ul>
+      </li>
+    </ol>
+    
+    <h2>Final Validation</h2>
+    <ul>
+        <li>Public EC2 should have internet access.</li>
+        <li>Private EC2 should only be reachable from Public EC2.</li>
+        <li>If NAT Gateway is configured, Private EC2 should be able to reach the internet.</li>
+    </ul>
+    
+    <h2>Automation using Terraform (Optional)</h2>
+    <p>If you want to automate the VPC creation, you can use <strong>Terraform</strong> to provision this infrastructure.</p>
+  
+    <h2>Terraform Project Structure</h2>
+    <pre><code>terraform-vpc/
+│-- main.tf          # Main Terraform configuration
+│-- variables.tf     # Variables for customization
+│-- outputs.tf       # Outputs for the created resources
+│-- provider.tf      # AWS Provider configuration
+│-- terraform.tfvars # Variable values
+</code></pre>
+
+    <h3>Step 1: Create provider.tf</h3>
+    <p>This file configures the AWS provider.</p>
+    <pre><code>provider "aws" {
+  region = var.aws_region
+}
+</code></pre>
+    <h3>Step 2: Create <code>variables.tf</code></h3>
+    <p>This file defines the variables.</p>
+    <pre><code>variable "aws_region" {
+  description = "AWS region"
+  default     = "us-east-1"
+}
+
+variable "vpc_cidr" {
+  description = "VPC CIDR block"
+  default     = "10.0.0.0/16"
+}
+
+variable "public_subnet_cidrs" {
+  description = "Public subnet CIDRs"
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24"]
+}
+
+variable "private_subnet_cidrs" {
+  description = "Private subnet CIDRs"
+  type        = list(string)
+  default     = ["10.0.3.0/24", "10.0.4.0/24"]
+}
+</code></pre>
+
+  <h3>Step 3: Create <code>main.tf</code></h3>
+  <p>This file contains the main Terraform resources.</p>
+  <pre><code># Create VPC
+resource "aws_vpc" "my_vpc" {
+  cidr_block = var.vpc_cidr
+  enable_dns_support = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "MyCustomVPC"
+  }
+}
+
+# Create Public Subnets
+resource "aws_subnet" "public_subnets" {
+  count = length(var.public_subnet_cidrs)
+
+  vpc_id                  = aws_vpc.my_vpc.id
+  cidr_block              = var.public_subnet_cidrs[count.index]
+  map_public_ip_on_launch = true
+  availability_zone       = element(["us-east-1a", "us-east-1b"], count.index)
+
+  tags = {
+    Name = "Public-Subnet-${count.index + 1}"
+  }
+}
+
+# Create Private Subnets
+resource "aws_subnet" "private_subnets" {
+  count = length(var.private_subnet_cidrs)
+
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = var.private_subnet_cidrs[count.index]
+  availability_zone = element(["us-east-1a", "us-east-1b"], count.index)
+
+  tags = {
+    Name = "Private-Subnet-${count.index + 1}"
+  }
+}
+
+# Create Internet Gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "MyInternetGateway"
+  }
+}
+
+# Create Public Route Table
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "Public-Route-Table"
+  }
+}
+
+# Add Route to Internet Gateway in Public Route Table
+resource "aws_route" "public_internet_route" {
+  route_table_id         = aws_route_table.public_rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.igw.id
+}
+
+# Associate Public Subnets with Public Route Table
+resource "aws_route_table_association" "public_association" {
+  count = length(var.public_subnet_cidrs)
+
+  subnet_id      = aws_subnet.public_subnets[count.index].id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+# Create NAT Gateway (for private subnet internet access)
+resource "aws_eip" "nat_eip" {
+  domain = "vpc"
+}
+
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = aws_subnet.public_subnets[0].id
+
+  tags = {
+    Name = "MyNATGateway"
+  }
+
+  depends_on = [aws_internet_gateway.igw]
+}
+
+# Create Private Route Table
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "Private-Route-Table"
+  }
+}
+
+# Add Route to NAT Gateway in Private Route Table
+resource "aws_route" "private_nat_route" {
+  route_table_id         = aws_route_table.private_rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat.id
+}
+
+# Associate Private Subnets with Private Route Table
+resource "aws_route_table_association" "private_association" {
+  count = length(var.private_subnet_cidrs)
+
+  subnet_id      = aws_subnet.private_subnets[count.index].id
+  route_table_id = aws_route_table.private_rt.id
+}
+</code></pre>
+
+  <h3>Step 4: Create <code>outputs.tf</code></h3>
+  <p>This file provides output values.</p>
+  <pre><code>output "vpc_id" {
+  value = aws_vpc.my_vpc.id
+}
+
+output "public_subnet_ids" {
+  value = aws_subnet.public_subnets[*].id
+}
+
+output "private_subnet_ids" {
+  value = aws_subnet.private_subnets[*].id
+}
+
+output "internet_gateway_id" {
+  value = aws_internet_gateway.igw.id
+}
+
+output "nat_gateway_id" {
+  value = aws_nat_gateway.nat.id
+}
+</code></pre>
+
+  <h3>Step 5: Create terraform.tfvars</h3>
+  <p>Define variable values (optional).</p>
+  <pre><code>aws_region = "us-east-1"
+vpc_cidr = "10.0.0.0/16"
+public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
+</code></pre>
+
+  <h2>Deployment Steps</h2>
+  <p>Run the following commands to deploy the infrastructure:</p>
+  <pre><code># Initialize Terraform
+terraform init
+
+# Preview the changes
+terraform plan
+
+# Apply the configuration
+terraform apply -auto-approve
+</code></pre>
+
+  <h3>Step 6: Destroy the Resources (If Needed)</h3>
+  <p>If you want to remove the infrastructure:</p>
+  <pre><code>terraform destroy -auto-approve
+</code></pre>
+
+  <h2>Validation & Testing</h2>
+  <ol>
+    <li>Go to AWS Console > VPC
+      <ul>
+        <li>Ensure the VPC, subnets, route tables, and gateways are created.</li>
+      </ul>
+    </li>
+    <li>Launch EC2 Instances
+      <ul>
+        <li>Launch an instance in the public subnet and verify internet connectivity.</li>
+        <li>Launch an instance in the private subnet and verify connectivity via NAT.</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2>Conclusion</h2>
+  <ul>
+    <li>This Terraform script automates VPC creation, including public/private subnets, route tables, IGW, and NAT Gateway.</li>
+    <li>You can extend this setup by adding security groups, S3 endpoints, and EC2 instances.</li>
+  </ul>
+</body>
+</html>
