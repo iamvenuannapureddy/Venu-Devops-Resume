@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Cloud Setup: On-Premise to AWS using Terraform</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 5px;
+            display: block;
+            white-space: pre-wrap;
+            border-left: 4px solid #3498db;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hybrid Cloud Setup: On-Premise to AWS using Terraform</h1>
+    <p>This project focuses on setting up a <strong>Hybrid Cloud</strong> environment by connecting an <strong>on-premise data center</strong> with <strong>AWS Cloud</strong> using <strong>AWS VPN or AWS Direct Connect</strong>. The goal is to enable seamless workload operations between on-prem and AWS.</p>
+    
+    <h2>Project Overview</h2>
+    <ul>
+        <li><strong>Infrastructure as Code (IaC):</strong> Use <strong>Terraform</strong> to automate the deployment.</li>
+        <li><strong>Hybrid Cloud Connectivity:</strong> Establish a <strong>VPN</strong> or <strong>Direct Connect</strong> between on-premise and AWS.</li>
+        <li><strong>Workload Deployment:</strong> Deploy an <strong>application</strong> that spans both environments.</li>
+        <li><strong>Security & Access Control:</strong> Secure traffic using IAM, Security Groups, and Network ACLs.</li>
+        <li><strong>Monitoring & Logging:</strong> Implement <strong>CloudWatch, CloudTrail, and Prometheus/Grafana</strong> for observability.</li>
+    </ul>
+    
+    <h2>Project Architecture</h2>
+    <h3>1. Hybrid Cloud Connectivity</h3>
+    <ul>
+        <li><strong>AWS VPN Setup:</strong>
+            <ul>
+                <li>Create a <strong>Customer Gateway</strong> (for on-prem router).</li>
+                <li>Create a <strong>Virtual Private Gateway</strong> (VGW) in AWS.</li>
+                <li>Establish an <strong>IPSec VPN Tunnel</strong>.</li>
+                <li>Configure <strong>on-prem router</strong> to establish VPN connectivity.</li>
+            </ul>
+        </li>
+        <p>OR</p>
+        <li><strong>AWS Direct Connect Setup (Alternative to VPN)</strong>
+            <ul>
+                <li>Order a <strong>Direct Connect (DX) connection</strong>.</li>
+                <li>Configure a <strong>DX Gateway</strong> and attach it to AWS VPC.</li>
+                <li>Use <strong>BGP Routing</strong> for private connectivity.</li>
+            </ul>
+        </li>
+    </ul>
+    
+    <h3>2. AWS VPC & Networking</h3>
+    <ul>
+        <li>Create a <strong>VPC</strong> with <strong>private/public subnets</strong>.</li>
+        <li>Deploy <strong>NAT Gateway</strong> for outbound internet access.</li>
+        <li>Implement <strong>Security Groups & NACLs</strong> to control access.</li>
+    </ul>
+    
+    <h3>3. On-Premises Setup</h3>
+    <ul>
+        <li>Use <strong>a local VM or bare-metal server</strong> simulating an on-prem workload.</li>
+        <li>Install and configure <strong>VPN Client</strong> if using a software-based VPN.</li>
+        <li>Configure <strong>local network routing</strong> to allow private connectivity.</li>
+    </ul>
+    
+    <h3>4. Hybrid Workload Deployment</h3>
+    <ul>
+        <li><strong>On-Prem App Server:</strong> Runs a <strong>legacy application</strong>.</li>
+        <li><strong>AWS EC2 Instance:</strong> Runs the <strong>cloud component</strong> of the application.</li>
+        <li><strong>AWS RDS Database:</strong> Shared between both environments.</li>
+        <li><strong>AWS S3:</strong> Stores shared files for hybrid access.</li>
+    </ul>
+    
+    <h3>5. Security & Compliance</h3>
+    <ul>
+        <li>IAM roles with <strong>least privilege access</strong>.</li>
+        <li><strong>VPC Flow Logs</strong> to monitor traffic.</li>
+        <li><strong>AWS CloudTrail</strong> for auditing.</li>
+        <li><strong>VPN/Direct Connect logs</strong> for troubleshooting.</li>
+    </ul>
+    
+    <h2>Implementation Steps</h2>
+    <ol>
+        <li><strong>Prepare Terraform Configuration</strong></li>
+        <li><strong>Deploy On-Prem Components</strong></li>
+        <li><strong>Deploy AWS Infrastructure using Terraform</strong></li>
+        <pre><code>terraform init
+tf plan
+terraform apply</code></pre>
+        <li><strong>Deploy Application Workloads</strong></li>
+        <li><strong>Validate & Test Hybrid Setup</strong></li>
+    </ol>
+  
+    <h2>Implementation Steps</h2>
+    <h4>1. Prepare Terraform Configuration</h4>
+    <p>Create Terraform files for:</p>
+    <ul>
+      <li><strong>Networking (VPC, Subnets, VPN, DX)</strong></li>
+      <li><strong>Compute Resources (EC2, RDS, S3)</strong></li>
+      <li><strong>Security & IAM Policies</strong></li>
+      <li><strong>Monitoring & Logging</strong></li>
+    </ul>
+    <h4>2. Deploy On-Prem Components</h4>
+    <ul>
+      <li>Configure the <strong>Customer Gateway</strong> for VPN.</li>
+      <li>Deploy <strong>local application servers.</strong></li>
+      <li>Set up <strong>local routing</strong> to AWS VPC.</li>
+    </ul>
+    <h4>3. Deploy AWS Infrastructure using Terraform</h4>
+    <pre><code>terraform init
+terraform plan
+terraform apply
+</code></pre>
+    <ul>
+      <li>Validate <strong>VPN Tunnel/Direct Connect</strong> connectivity.</li>
+      <li>Test <strong>private communication</strong> between AWS and on-prem.</li>
+    </ul>
+    <h4>4. Deploy Application Workloads</h4>
+    <ul>
+      <li>Launch <strong>EC2 instances</strong> for cloud-based services.</li>
+      <li>Set up <strong>AWS RDS for hybrid database.</strong></li>
+      <li>Sync application data between <strong>on-prem & AWS S3.</strong></li>
+    </ul>
+    <h4>5. Validate & Test Hybrid Setup</h4>
+    <ul>
+      <li>Verify <strong>connectivity between on-prem and AWS.</strong></li>
+      <li>Test <strong>application performance & latency.</strong></li>
+      <li>Check <strong>security logs and monitoring dashboards.</strong></li>
+    </ul>
+    
+    <h2>Terraform Code Structure</h2>
+    <pre><code>
+├── main.tf             # Entry point for Terraform
+├── vpc.tf              # AWS VPC, subnets, and route tables
+├── vpn.tf              # VPN / Direct Connect setup
+├── security.tf         # Security groups, IAM roles, and NACLs
+├── compute.tf          # EC2 instances and Auto Scaling Groups
+├── database.tf         # RDS and database configuration
+├── storage.tf          # S3 setup for shared storage
+├── monitoring.tf       # CloudWatch, Prometheus/Grafana setup
+├── outputs.tf          # Output values
+└── variables.tf        # Input variables for Terraform
+    </code></pre>
+    
+    <h2>Expected Outcome</h2>
+    <ul>
+        <li>A <strong>secure, reliable</strong> connection between <strong>on-premises</strong> and <strong>AWS Cloud</strong>.</li>
+        <li>Seamless <strong>hybrid workload deployment</strong>.</li>
+        <li>Centralized <strong>logging and monitoring</strong> for visibility.</li>
+        <li>Fully <strong>automated infrastructure</strong> using Terraform.</li>
+    </ul>
+    
+    <h2>Next Steps</h2>
+    <ul>
+        <li>Implement <strong>Disaster Recovery (DR)</strong> using AWS Backup.</li>
+        <li>Optimize costs with <strong>EC2 Reserved Instances & Savings Plans</strong>.</li>
+        <li>Extend hybrid cloud <strong>to multi-cloud</strong> with Azure/AWS integration.</li>
+    </ul>
+</body>
+</html>
