@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Deploy a Static Website to AWS S3 or Apache Web Server</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1> Deploy a Static Website to AWS S3 or Apache Web Server</h1>
+    
+    <h2>Objective</h2>
+    <p>Deploy a simple static website using <strong>AWS S3 (for serverless hosting)</strong> or <strong>Apache (for traditional hosting on an EC2 instance)</strong>. Automate the deployment process using a script.</p>
+
+    <h2>Project Scope</h2>
+    <ul>
+        <li>Host a static website using <strong>AWS S3 (Serverless Option)</strong> OR <strong>Apache Web Server on EC2</strong>.</li>
+        <li>Automate deployment using a <strong>Shell script</strong>.</li>
+        <li>Implement basic security measures (Bucket Policies, IAM roles, or Firewall rules).</li>
+        <li>Configure <strong>CI/CD pipeline (optional)</strong> for automatic updates.</li>
+    </ul>
+
+    <h2>Architecture</h2>
+    <h3>Option 1: AWS S3 Hosting</h3>
+    <ol>
+        <li><strong>AWS S3 Bucket</strong> (Public or Private with CloudFront)</li>
+        <li><strong>IAM Policies</strong> for Secure Access</li>
+        <li><strong>CloudFront (Optional for Performance & HTTPS)</strong></li>
+        <li><strong>Route 53 (Optional for Custom Domain)</strong></li>
+    </ol>
+
+    <h3>Option 2: Apache Web Server</h3>
+    <ol>
+        <li><strong>AWS EC2 (Amazon Linux/Ubuntu)</strong></li>
+        <li><strong>Apache Web Server</strong></li>
+        <li><strong>Security Groups & IAM Roles</strong></li>
+        <li><strong>Route 53 (Optional for Custom Domain)</strong></li>
+    </ol>
+
+    <h2>Implementation Steps</h2>
+    <h3>Step 1: Prerequisites</h3>
+    <ul>
+        <li>AWS Account with IAM User Access</li>
+        <li>AWS CLI installed and configured (<code>aws configure</code>)</li>
+        <li>Domain (if needed) and Route 53 setup</li>
+        <li>SSH Key for EC2 (if using Apache)</li>
+        <li>Basic knowledge of Bash scripting</li>
+    </ul>
+
+    <h3>Step 2: Setup AWS S3 for Hosting (Option 1)</h3>
+    <h4>1. Create an S3 Bucket</h4>
+    <pre>aws s3 mb s3://my-static-website --region us-east-1</pre>
+    <h4>2. Enable Static Website Hosting</h4>
+    <pre>aws s3 website s3://my-static-website --index-document index.html</pre>
+    <h4>3. Upload Website Files</h4>
+    <pre>aws s3 cp ./website/ s3://my-static-website/ --recursive</pre>
+    <h4>4. Configure Public Read Access (If Needed)</h4>
+    <pre>cat > policy.json <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::my-static-website/*"
+    }
+  ]
+}
+EOF
+
+aws s3api put-bucket-policy --bucket my-static-website --policy file://policy.json
+</pre>
+    <h4>5. (Optional) Configure CloudFront for HTTPS</h4>
+    <pre>aws cloudfront create-distribution --origin-domain-name my-static-website.s3.amazonaws.com</pre>
+      
+    <h3>Step 3: Setup Apache Web Server on EC2 (Option 2)</h3>
+    <h4>1. Launch EC2 Instance</h4>
+    <pre>aws ec2 run-instances --image-id ami-0abcdef1234567890 --instance-type t2.micro --key-name my-key --security-groups my-security-group</pre>
+    <h4>2. Install Apache & Deploy Website</h4>
+    <pre>
+ssh -i my-key.pem ec2-user@&lt;EC2-PUBLIC-IP&gt; << 'EOF'
+sudo yum update -y
+sudo yum install httpd -y
+sudo systemctl start httpd
+sudo systemctl enable httpd
+echo "&lt;h1&gt;Welcome to My Website&lt;/h1&gt;" | sudo tee /var/www/html/index.html
+EOF
+    </pre>
+    <h4>3. Configure Security Group to Allow HTTP/HTTPS</h4>
+    <pre>aws ec2 authorize-security-group-ingress --group-name my-security-group --protocol tcp --port 80 --cidr 0.0.0.0/0</pre>
+
+    <h3>Step 4: Automate Deployment with a Shell Script</h3>
+    <p>Create a script to handle deployments.</p>
+    <p><strong>deploy.sh</strong></p>
+    <pre>
+#!/bin/bash
+
+S3_BUCKET="my-static-website"
+EC2_USER="ec2-user"
+EC2_IP="your-ec2-public-ip"
+DEPLOY_PATH="/var/www/html"
+
+echo "Choose Deployment Option:"
+echo "1 - Deploy to AWS S3"
+echo "2 - Deploy to Apache on EC2"
+read -p "Enter your choice: " choice
+
+if [ "$choice" -eq 1 ]; then
+  echo "Deploying to S3..."
+  aws s3 cp ./website/ s3://$S3_BUCKET/ --recursive
+  echo "Deployment to S3 completed!"
+elif [ "$choice" -eq 2 ]; then
+  echo "Deploying to Apache Web Server..."
+  scp -r ./website/* $EC2_USER@$EC2_IP:$DEPLOY_PATH
+  ssh $EC2_USER@$EC2_IP "sudo systemctl restart httpd"
+  echo "Deployment to Apache completed!"
+else
+  echo "Invalid option, exiting."
+  exit 1
+fi
+    </pre>
+
+    <p>Run the script:</p>
+    <pre>chmod +x deploy.sh
+./deploy.sh
+</pre>
+    
+    <h3>Step 5: Post-Deployment Validation</h3>
+    <ul>
+        <li><strong>For S3:</strong> Open <code>http://my-static-website.s3-website-us-east-1.amazonaws.com</code></li>
+        <li><strong>For EC2:</strong> Open <code>http://&lt;EC2-PUBLIC-IP&gt;</code></li>
+    </ul>
+
+    <h3>Step 6: (Optional) CI/CD Pipeline</h3>
+    <p>For automated deployments, integrate the script into GitHub Actions or Jenkins.</p>
+    <h4>GitHub Actions Workflow Example</h4>
+    <p>Create .github/workflows/deploy.yml</p>
+    <pre>
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install AWS CLI
+        run: sudo apt-get install -y awscli
+
+      - name: Deploy to S3
+        run: aws s3 cp ./website/ s3://my-static-website/ --recursive
+    </pre>
+
+    <h2>Conclusion</h2>
+    <p>This project provides a <strong>simple deployment workflow</strong> for hosting a static website on <strong>AWS S3</strong> or an <strong>Apache Web Server</strong> using <strong>manual setup, automated scripts, and CI/CD pipelines</strong>.</p>
+</body>
+</html>
