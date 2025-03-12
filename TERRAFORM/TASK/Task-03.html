@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS IAM Configuration for Secure Access Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 5px;
+            display: block;
+            white-space: pre-wrap;
+            border-left: 4px solid #3498db;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1> AWS IAM Configuration for Secure Access Management</h1>
+    
+    <h2>Task Overview</h2>
+    <p>This task aims to implement Identity and Access Management (IAM) on AWS by setting up IAM users, groups, roles, and policies to control access to AWS resources securely. The project ensures <strong>least privilege access</strong>, <strong>role-based access control (RBAC)</strong>, and <strong>security best practices</strong>.</p>
+    
+    <h2>Project Objectives</h2>
+    <ul>
+        <li><strong>Create IAM Users</strong> – Define multiple users with specific permissions.</li>
+        <li><strong>Create IAM Groups</strong> – Organize users based on roles.</li>
+        <li><strong>Attach Predefined and Custom Policies</strong> – Use AWS Managed and Custom Policies.</li>
+        <li><strong>Enable Multi-Factor Authentication (MFA)</strong> – Secure user authentication.</li>
+        <li><strong>Configure IAM Roles</strong> – Allow services to access AWS resources securely.</li>
+        <li><strong>Implement Access Keys and CLI Access</strong> – Provide programmatic access.</li>
+        <li><strong>Audit IAM Access Using AWS IAM Reports</strong> – Generate security audit reports.</li>
+    </ul>
+    
+    <h2>AWS Services Used</h2>
+    <ul>
+        <li>IAM (Identity and Access Management)</li>
+        <li>S3 (Simple Storage Service)</li>
+        <li>EC2 (Elastic Compute Cloud)</li>
+        <li>CloudTrail (for logging IAM activity)</li>
+        <li>AWS CLI (Command Line Interface)</li>
+    </ul>
+    
+    <h2>Implementation Steps</h2>
+    
+    <h3>Step 1: Create IAM Users</h3>
+    <ol>
+        <li>Navigate to the AWS <strong>IAM Console</strong>.</li>
+        <li>Click on <strong>Users</strong> → <strong>Add User</strong>.</li>
+        <li>Provide a username (e.g., <em>dev-user</em>, <em>admin-user</em>).</li>
+        <li>Select <strong>AWS Management Console Access</strong> and set a password.</li>
+        <li>Enable <strong>Programmatic Access</strong> (for CLI and SDK access).</li>
+        <li>Click <strong>Next</strong> → <strong>Review and Create</strong> the user.</li>
+    </ol>
+    
+    <h3>Step 2: Create IAM Groups and Assign Users</h3>
+    <ol>
+        <li>Navigate to <strong>IAM Console</strong> → <strong>Groups</strong>.</li>
+        <li>Click <strong>Create Group</strong>.</li>
+        <li>Provide a <strong>Group Name</strong> (e.g., <em>Developers</em>, <em>Admins</em>, <em>Billing-Team</em>).</li>
+        <li>Attach AWS Managed Policies:
+            <ul>
+                <li><strong>Developers:</strong> AmazonS3ReadOnlyAccess, AmazonEC2ReadOnlyAccess</li>
+                <li><strong>Admins:</strong> AdministratorAccess</li>
+                <li><strong>Billing-Team:</strong> AWSBillingReadOnlyAccess</li>
+            </ul>
+        </li>
+        <li>Click <strong>Create Group</strong>.</li>
+        <li>Assign users to the appropriate groups.</li>
+    </ol>
+    
+    <h3>Step 3: Attach Predefined Policies</h3>
+    <p>Attach <strong>AWS Managed Policies</strong> to groups:</p>
+    <ul>
+        <li><strong>AdministratorAccess</strong> (for Admins)</li>
+        <li><strong>AmazonS3FullAccess</strong> (for Developers requiring full S3 access)</li>
+        <li><strong>ReadOnlyAccess</strong> (for security compliance users)</li>
+    </ul>
+    
+    <h3>Step 4: Create Custom IAM Policies</h3>
+    
+    <h4>Custom Policy 1: Restrict S3 Access to a Specific Bucket</h4>
+    <ol>
+      <li>Navigate to IAM → Policies → Create Policy.</li>
+      <li>Select JSON Editor and define the following policy:</li>
+    <pre>
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": ["s3:ListBucket", "s3:GetObject"],
+                "Resource": [
+                    "arn:aws:s3:::my-secure-bucket",
+                    "arn:aws:s3:::my-secure-bucket/*"
+                ]
+            }
+        ]
+    }
+    </pre>
+      <li>Click Next → Review → Name it S3-Bucket-Access → Create Policy.</li>
+    </ol>
+    
+    <h4>Custom Policy 2: Restrict EC2 Actions to Specific Regions</h4>
+    <pre>
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Deny",
+                "Action": "ec2:*",
+                "Resource": "*",
+                "Condition": {
+                    "StringNotEquals": {
+                        "aws:RequestedRegion": "us-east-1"
+                    }
+                }
+            }
+        ]
+    }
+    </pre>
+
+  <p>Purpose: This policy restricts EC2 operations outside us-east-1.</p>
+
+    <h3>Step 5: Apply IAM Role for AWS Service Access</h3>
+      <ol>
+        <li>Navigate to IAM Console → Roles.</li>
+        <li>Click Create Role.</li>
+        <li>Select AWS Service → Choose EC2 (for granting access to EC2 instances).</li>
+        <li>Attach AmazonS3FullAccess to allow EC2 to access S3.</li>
+        <li>Click Create Role → Assign it to an EC2 instance.</li>
+      </ol>
+
+    <h3>Step 6: Enable MFA for IAM Users</h3>
+      <ol>
+        <li>Navigate to IAM → Users.</li>
+        <li>Click on a user and go to Security Credentials.</li>
+        <li>Click Enable MFA → Select Virtual MFA Device.</li>
+        <li>Use Google Authenticator to scan the QR code and enter the generated code.</li>
+        <li>Click Enable.</li>
+      </ol>
+
+    <h3>Step 7: Configure CLI and Access Keys</h3>
+      <ol>
+        <li>Generate Access Keys for a user:
+          <ul>
+            <li>Go to IAM Users → Select a user.</li>
+            <li>Click Create Access Key.</li>
+            <li>Download .csv file containing the Access Key ID and Secret Key.</li>
+          </ul>
+        </li>
+        <li>Configure AWS CLI:
+          <pre><code>aws configure
+</code></pre>
+          <p>Enter:</p>
+          <ul>
+          <li>Access Key</li>
+          <li>Secret Key</li>
+          <li>Region (e.g., us-east-1)</li>
+          <li>Output format (json)</li>
+        </ul>
+        </li>
+      </ol>
+
+    <h3>Step 8: Monitor IAM Activity Using AWS CloudTrail</h3>
+      <ol>
+        <li>Navigate to CloudTrail Console.</li>
+        <li>Create a new Trail to monitor IAM actions.</li>
+        <li>Enable logging to an S3 Bucket for auditing.</li>
+      </ol>
+
+    <h2>Project Deliverables</h2>
+    <ol>
+      <li>IAM User, Group, and Policy Implementation.</li>
+      <li>IAM Role Configuration for EC2 Access.</li>
+      <li>MFA Implementation for IAM Security.</li>
+      <li>Custom IAM Policies for Security Restrictions.</li>
+      <li>AWS CLI Configuration for Programmatic Access.</li>
+      <li>CloudTrail Audit Logging Setup.</li>
+    </ol>
+  
+    <h2>Security Best Practices Implemented</h2>
+    <ul>
+        <li><strong>Least Privilege Principle</strong> – Users and groups get only the permissions they need.</li>
+        <li><strong>MFA for Enhanced Security</strong> – Enforces two-factor authentication.</li>
+        <li><strong>IAM Role-based Access Control</strong> – Secure service-to-service interaction.</li>
+        <li><strong>Access Restriction via Policies</strong> – Custom policies enforce security compliance.</li>
+        <li><strong>Audit Logging via CloudTrail</strong> – Tracks IAM activity for security audits.</li>
+    </ul>
+    
+    <h2>Conclusion</h2>
+    <p>This project provides a secure <strong>IAM setup</strong> by defining <strong>users, groups, policies, and roles</strong> with proper access control.
+      It also ensures security compliance by <strong>restricting access using IAM policies</strong>, <strong>enforcing MFA</strong>, and <strong>monitoring IAM activities with CloudTrail</strong>.</p>
+</body>
+</html>
