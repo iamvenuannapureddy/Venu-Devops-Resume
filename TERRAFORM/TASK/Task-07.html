@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Auto Scaling and Load Balancing Using Terraform</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 5px;
+            display: block;
+            white-space: pre-wrap;
+            border-left: 4px solid #3498db;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1> Auto Scaling and Load Balancing Using Terraform</h1>
+    
+    <h2>Objective</h2>
+    <p>The goal of this task is to implement a <strong>highly available and scalable</strong> architecture in AWS using <strong>Auto Scaling Group (ASG) and an Elastic Load Balancer (ELB)</strong>. Terraform will be used to provision the infrastructure.</p>
+    
+    <h2>Task Architecture</h2>
+    <ol>
+        <li><strong>AWS VPC</strong>
+            <ul>
+                <li>A dedicated VPC for networking.</li>
+                <li>Subnets in different availability zones for high availability.</li>
+                <li>Internet Gateway for outbound traffic.</li>
+            </ul>
+        </li>
+        <li><strong>Security Groups</strong>
+            <ul>
+                <li>Allow HTTP/HTTPS traffic to the Load Balancer.</li>
+                <li>Restrict SSH access to a specific IP range.</li>
+                <li>Secure EC2 instances behind the Load Balancer.</li>
+            </ul>
+        </li>
+        <li><strong>Application Load Balancer (ALB)</strong>
+            <ul>
+                <li>Distributes incoming traffic across multiple EC2 instances.</li>
+                <li>Health checks to ensure only healthy instances receive traffic.</li>
+            </ul>
+        </li>
+        <li><strong>Auto Scaling Group (ASG)</strong>
+            <ul>
+                <li>Ensures scalability and fault tolerance.</li>
+                <li>Uses Launch Template to define instance configurations.</li>
+                <li>Automatically adjusts instance count based on demand.</li>
+            </ul>
+        </li>
+        <li><strong>Terraform Modules</strong>
+            <ul>
+                <li><strong>VPC Module:</strong> Manages VPC, subnets, and networking components.</li>
+                <li><strong>Security Group Module:</strong> Defines security groups.</li>
+                <li><strong>ALB Module:</strong> Creates the Load Balancer and Target Groups.</li>
+                <li><strong>ASG Module:</strong> Provisions the Auto Scaling Group with policies.</li>
+            </ul>
+        </li>
+    </ol>
+    
+    <h2>Implementation Steps</h2>
+    
+    <h3>1. Set Up Terraform Directory Structure</h3>
+    <pre>
+terraform-project/
+│── modules/
+│   ├── vpc/
+│   ├── security-groups/
+│   ├── alb/
+│   ├── asg/
+│── main.tf
+│── variables.tf
+│── outputs.tf
+│── terraform.tfvars
+│── providers.tf
+    </pre>
+    
+    <h3>2. Define VPC Module <code>(modules/vpc/main.tf)</code></h3>
+    <pre>
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "3.11.0"
+  
+  name = "auto-scaling-vpc"
+  cidr = "10.0.0.0/16"
+  
+  azs             = ["us-east-1a", "us-east-1b"]
+  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
+  
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+}
+    </pre>
+    
+    <h3>3. Define Security Groups <code>(modules/security-groups/main.tf)</code></h3>
+    <pre>
+resource "aws_security_group" "elb_sg" {
+  name        = "elb-security-group"
+  description = "Allow HTTP and HTTPS traffic"
+  vpc_id      = module.vpc.vpc_id
+  
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+    </pre>
+    
+    <h3>4. Define Application Load Balancer (ALB) <code>(modules/alb/main.tf)</code></h3>
+    <pre>
+module "alb" {
+  source  = "terraform-aws-modules/alb/aws"
+  version = "7.1.0"
+
+  name               = "autoscaling-alb"
+  load_balancer_type = "application"
+  vpc_id             = module.vpc.vpc_id
+  subnets            = module.vpc.public_subnets
+  security_groups    = [aws_security_group.elb_sg.id]
+
+  target_groups = [
+    {
+      name     = "asg-target-group"
+      port     = 80
+      protocol = "HTTP"
+      vpc_id   = module.vpc.vpc_id
+    }
+  ]
+}
+  </pre>
+    
+    <h3>5. Define Auto Scaling Group (ASG) <code>(modules/asg/main.tf)</code></h3>
+    <pre>
+module "asg" {
+  source = "terraform-aws-modules/autoscaling/aws"
+
+  name                = "web-asg"
+  min_size           = 2
+  max_size           = 5
+  desired_capacity   = 2
+  vpc_zone_identifier = module.vpc.public_subnets
+
+  launch_template = {
+    id      = aws_launch_template.web.id
+    version = "$Latest"
+  }
+
+  target_group_arns = module.alb.target_group_arns
+}
+
+    </pre>
+
+  <h3>6. Define Launch Template <code>(modules/asg/launch-template.tf)</code></h3>
+  <pre>
+resource "aws_launch_template" "web" {
+  name          = "web-launch-template"
+  image_id      = "ami-0c55b159cbfafe1f0"  # Replace with your region-specific AMI ID
+  instance_type = "t2.micro"
+
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.elb_sg.id]
+  }
+
+  user_data = base64encode(<<-EOF
+              #!/bin/bash
+              sudo apt update -y
+              sudo apt install -y apache2
+              echo "Hello, Terraform!" > /var/www/html/index.html
+              sudo systemctl start apache2
+              sudo systemctl enable apache2
+              EOF
+  )
+  }  </pre>
+
+    <h3>7. Define Outputs (outputs.tf)</h3>
+    <pre>output "alb_dns_name" {
+  description = "Load Balancer DNS Name"
+  value       = module.alb.lb_dns_name
+}
+</pre>
+
+    <h3>8. Deploy Infrastructure</h3>
+    <ol>
+      <li>Initialize Terraform</li>
+      <pre><code>terraform init</code></pre>
+      <li>Plan the Deployment</li>
+      <pre><code>terraform plan</code></pre>
+      <li>Apply the Configuration</li>
+      <pre><code>terraform apply -auto-approve</code></pre>
+    </ol>
+    
+    <h2>Validation</h2>
+    <ol>
+        <li>Verify Load Balancer.
+          <ul>
+            <li>Go to AWS Console → EC2 → Load Balancers.</li>
+            <li>Copy the DNS Name and open it in a browser.</li>
+            <li>You should see the "Hello, Terraform!" message.</li>
+          </ul>
+        </li>
+        <li>Check Auto Scaling by terminating an instance manually.
+          <ul>
+            <li>Terminate an instance manually and observe if it is replaced automatically.</li>
+            <li>Simulate a load test to trigger scaling policies.</li>
+          </ul>
+        </li>
+    </ol>
+    
+    <h2>Cleanup</h2>
+    <p>If you want to destroy the infrastructure:</p>
+    <pre>
+terraform destroy -auto-approve
+    </pre>
+    
+    <h2>Conclusion</h2>
+    <p>This project successfully provisions a <strong>highly available</strong> and <strong>scalable</strong> infrastructure using Terraform modules. The <strong>Auto Scaling Group (ASG) ensures resilience</strong>, while the <strong>Elastic Load Balancer (ELB) distributes traffic</strong> efficiently.</p>
+</body>
+</html>
