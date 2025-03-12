@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project: Automating Infrastructure with Ansible Roles and Publishing to Ansible Galaxy</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        code { font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1> Automating Infrastructure with Ansible Roles and Publishing to Ansible Galaxy</h1>
+    
+    <h2>Task Overview</h2>
+    <p>This Task focuses on <strong>creating reusable Ansible roles</strong> to automate common infrastructure tasks such as <strong>web server setup, user management, and log rotation</strong>. The roles will be modular, configurable, and optimized for reusability. Once developed, they will be <strong>tested, documented, and published on Ansible Galaxy</strong> for public use.</p>
+    
+    <h2>Task Scope</h2>
+    <ul>
+        <li><strong>Create three reusable Ansible roles:</strong>
+            <ol>
+                <li>Web Server Setup (Apache/Nginx)</li>
+                <li>User Management</li>
+                <li>Log Rotation</li>
+            </ol>
+        </li>
+        <li><strong>Use Ansible Best Practices</strong> to ensure modularity and maintainability.</li>
+        <li><strong>Test roles using Molecule.</strong></li>
+        <li><strong>Store roles in a GitHub repository</strong> for version control.</li>
+        <li><strong>Publish roles to Ansible Galaxy.</strong></li>
+        <li><strong>Document the roles with README files</strong> for easy usage.</li>
+    </ul>
+    
+    <h2>Tech Stack</h2>
+    <ul>
+        <li><strong>Ansible</strong> (for automation)</li>
+        <li><strong>Molecule + Testinfra</strong> (for testing)</li>
+        <li><strong>Git & GitHub</strong> (for version control)</li>
+        <li<strong>Ansible Galaxy</strong> (for publishing)</li>
+        <li><strong>Linux-based servers (Ubuntu/RHEL)</strong> (for deployment)</li>
+    </ul>
+    
+    <h2>Step-by-Step Implementation</h2>
+    
+    <h3>Step 1: Install Required Tools</h3>
+    <p>Ensure you have the necessary tools installed on your system.</p>
+    <pre><code># Install Ansible
+pip install ansible
+
+# Install Molecule for testing
+pip install molecule[docker]
+
+# Install other dependencies
+pip install ansible-lint pytest-testinfra</code></pre>
+    
+    <h3>Step 2: Initialize Ansible Role Structure</h3>
+    <p>Create the required roles using Ansible’s built-in ansible-galaxy command.</p>
+    <pre><code>ansible-galaxy init ansible-role-webserver
+ansible-galaxy init ansible-role-user-management
+ansible-galaxy init ansible-role-log-rotation</code></pre>
+     <p>This will generate a <strong>standard role structure:</strong></p>
+    <pre><code>ansible-role-webserver/
+│── defaults/
+│── handlers/
+│── meta/
+│── tasks/
+│── templates/
+│── tests/
+│── vars/
+</code></pre>
+  
+    <h3>Step 3: Define Role Functionality</h3>
+    <p>Each role will have a <strong>specific purpose and configurations.</strong></p>
+    <h4>1. Web Server Setup Role</h4>
+    <p>This role installs and configures Apache (or Nginx) on target systems.</p>
+    <ul>
+        <li>Tasks (tasks/main.yml)</li>
+    <pre><code>- name: Install Apache
+  package:
+    name: apache2
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Ensure Apache service is started
+  service:
+    name: apache2
+    state: started
+    enabled: yes</code></pre>
+      <li>Default Variables (defaults/main.yml)</li>
+      <pre><code>---
+webserver_package: apache2
+</code></pre>
+      <li>Handler (handlers/main.yml)</li>
+      <pre><code>---
+- name: Restart Apache
+  service:
+    name: apache2
+    state: restarted
+</code></pre>
+    </ul>
+  
+    <h4>2. User Management Role</h4>
+    <p>This role <strong>creates users, assigns SSH keys, and manages groups.</strong></p>
+    <ul>
+        <li>Tasks (tasks/main.yml)</li>
+    <pre><code>- name: Create users
+  user:
+    name: "{{ item.name }}"
+    state: present
+    shell: /bin/bash
+  with_items: "{{ users }}"</code></pre>
+        <li>Variables (vars/main.yml)</li>
+        <pre><code>---
+users:
+  - name: "deploy"
+  - name: "admin"
+</code></pre>
+    </ul>
+  
+    <h4>3. Log Rotation Role</h4>
+    <p>This role configures <strong>log rotation policies.</strong></p>
+    <ul><li>Tasks (tasks/main.yml)</li>
+    <pre><code>- name: Copy logrotate configuration
+  template:
+    src: logrotate.j2
+    dest: /etc/logrotate.d/custom_logs</code></pre>
+    <li><strong>Template</strong> (templates/logrotate.j2)</li>
+      <pre><code>/var/log/custom/*.log {
+    daily
+    rotate 7
+    compress
+    missingok
+}
+</code></pre>
+    </ul>
+    <h3>Step 4: Test Roles Using Molecule</h3>
+    <p>Create a molecule test scenario for each role.</p>
+    <pre><code>molecule init scenario --role-name ansible-role-webserver
+molecule test</code></pre>
+    
+    <h3>Step 5: Store in GitHub</h3>
+    <p>Push the roles to GitHub for version control.</p>
+    <pre><code>git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/yourusername/ansible-roles
+git push -u origin main</code></pre>
+    
+    <h3>Step 6: Publish to Ansible Galaxy</h3>
+    <p>Login to <strong>Ansible Galaxy</strong> and publish the roles.</p>
+    <pre><code>ansible-galaxy login
+ansible-galaxy role import yourusername ansible-role-webserver</code></pre>
+    <p>Verify the role is available at Ansible Galaxy.</p>
+    
+    <h3>Conclusion</h3>
+    <ul>
+        <li>We successfully created three <strong>modular and reusable</strong> Ansible roles.</li> 
+        <li>The roles were <strong>tested using Molecule</strong></li> 
+        <li>They were <strong>stored in GitHub</strong>, and <strong>published to Ansible Galaxy</strong>.</li> 
+        <li>These roles can now be used across multiple projects for automation.</li> 
+    </ul>
+    <p>This helps in standardizing automation and improving reusability for common system administration tasks.</p>
+</body>
+</html>
