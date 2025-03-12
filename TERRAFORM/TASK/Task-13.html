@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terraform for Multi-Cloud Deployments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 5px;
+            display: block;
+            white-space: pre-wrap;
+            border-left: 4px solid #3498db;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Terraform for Multi-Cloud Deployments </h1>
+    
+    <h2>Task Overview</h2>
+    <p>This task demonstrates how to deploy and manage cloud workloads across <strong>AWS, Azure, and GCP</strong> using a <strong>single Terraform configuration</strong>. The project includes provisioning compute instances, storage, networking, and security policies in each cloud while ensuring <strong>consistency and automation</strong> using Terraform.</p>
+    
+    <h2>Objectives</h2>
+    <ul>
+        <li><strong>Multi-Cloud Support:</strong> Deploy and manage infrastructure across AWS, Azure, and GCP using Terraform.</li>
+        <li><strong>Infrastructure as Code (IaC):</strong> Automate provisioning and management of resources.</li>
+        <li><strong>Modular & Scalable Design:</strong> Use Terraform modules for reusable infrastructure across different clouds.</li>
+        <li><strong>State Management & Security:</strong> Store Terraform state securely using remote backends (AWS S3, Azure Blob, GCP Cloud Storage).</li>
+        <li><strong>CI/CD Integration:</strong> Automate deployments using GitHub Actions or Jenkins.</li>
+        <li><strong>Networking & Security:</strong> Configure VPC, Subnets, Security Groups, IAM, and Firewall Rules across providers.</li>
+    </ul>
+    
+    <h2>Technology Stack</h2>
+    <ul>
+        <li><strong>Terraform</strong> (Infrastructure as Code)</li>
+        <li><strong>AWS:</strong> EC2, S3, VPC, IAM</li>
+        <li><strong>Azure:</strong> Virtual Machines, Blob Storage, Virtual Networks, RBAC</li>
+        <li><strong>GCP:</strong> Compute Engine, Cloud Storage, VPC, IAM</li>
+        <li><strong>Terraform Cloud/Backend:</strong> AWS S3 + DynamoDB / Azure Blob Storage / GCP Cloud Storage</li>
+        <li><strong>CI/CD:</strong> GitHub Actions / Jenkins</li>
+        <li><strong>Monitoring:</strong> Prometheus, Grafana</li>
+    </ul>
+    
+    <h2>High-Level Architecture</h2>
+    <pre>
+                  +---------------------------------+
+                  |         GitHub/Jenkins         |
+                  +---------------------------------+
+                               |
+           ---------------------------------------------------
+           |                     |                        |
+       AWS VPC               Azure VNet               GCP VPC
+      (EC2, S3)             (VM, Blob)              (GCE, GCS)
+           |                     |                        |
+      Security Groups       NSG & RBAC              Firewall Rules
+    </pre>
+    
+    <h2>Implementation Steps</h2>
+    
+    <h3>Step 1: Setup Terraform for Multi-Cloud</h3>
+    <ol>
+        <li><strong>Install Terraform</strong>
+            <pre>
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+    sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+    sudo apt-get update && sudo apt-get install terraform
+    terraform -version
+            </pre>
+        </li>
+        <li><strong>Setup Provider Credentials</strong>
+            <ul>
+                <li>AWS: Create IAM user and configure AWS CLI</li>
+                <li>Azure: Register an app in Azure AD and obtain credentials</li>
+                <li>GCP: Generate a service account key</li>
+            </ul>
+        </li>
+        <li><strong>Initialize Terraform Providers</strong>
+            <pre>
+    terraform {
+      required_providers {
+        aws = { source = "hashicorp/aws" }
+        azurerm = { source = "hashicorp/azurerm" }
+        google = { source = "hashicorp/google" }
+      }
+    }
+            </pre>
+        </li>
+    </ol>
+    
+    <h3>Step 2: Configure Remote State Backend</h3>
+    <p>Use <strong>S3/DynamoDB, Azure Blob Storage, or GCP Cloud Storage</strong> for state management.</p>
+    <ol>
+      <li><strong>AWS S3 Backend Example:</strong></li>
+    
+    <pre>
+    terraform {
+      backend "s3" {
+        bucket         = "terraform-state-multicloud"
+        key            = "global/terraform.tfstate"
+        region         = "us-east-1"
+        encrypt        = true
+        dynamodb_table = "terraform-lock"
+      }
+    }
+    </pre>
+
+    <li><strong>Azure Blob Backend Example:</strong></li>
+    
+    <pre>
+    terraform {
+  backend "azurerm" {
+    resource_group_name   = "terraform-backend"
+    storage_account_name  = "tfstateaccount"
+    container_name        = "tfstate"
+    key                   = "terraform.tfstate"
+  }
+}
+
+    </pre>
+    </ol>
+  
+    <h3>Step 3: Define Multi-Cloud Infrastructure</h3>
+    <ol>
+      <li><strong>AWS EC2 Instance</strong></li>
+   
+    <pre>
+    provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_instance" "web" {
+  ami           = "ami-12345678"
+  instance_type = "t2.micro"
+  tags = {
+    Name = "AWS-WebServer"
+  }
+}
+    </pre>
+       <li><strong> Azure Virtual Machine</strong></li>
+      <pre>provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_virtual_machine" "web" {
+  name                = "AzureVM"
+  location            = "East US"
+  resource_group_name = "terraform-rg"
+  vm_size             = "Standard_B1s"
+}
+</pre>
+        <li><strong>GCP Compute Engine</strong></li>
+        <pre>provider "google" {
+  project = "my-gcp-project"
+  region  = "us-central1"
+}
+
+resource "google_compute_instance" "web" {
+  name         = "GCP-WebServer"
+  machine_type = "e2-medium"
+  zone         = "us-central1-a"
+}
+</pre>
+     </ol>
+  
+    <h3>Step 4: Networking and Security</h3>
+    <h4>AWS VPC with Security Group</h4>
+    <pre>
+   resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_security_group" "allow_ssh" {
+  vpc_id = aws_vpc.main.id
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+    </pre>
+     <h4>Azure NSG (Network Security Group)</h4>
+      <pre>resource "azurerm_network_security_group" "nsg" {
+  name                = "azure-nsg"
+  location            = "East US"
+  resource_group_name = "terraform-rg"
+}
+</pre>
+    <h4>GCP Firewall Rule</h4>
+    <pre>resource "google_compute_firewall" "allow-ssh" {
+  name    = "allow-ssh"
+  network = "default"
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+}
+</pre>
+  
+    <h3>Step 5: Apply Terraform Configuration</h3>
+    <ol>
+      <li>Initialize Terraform</li>
+      <pre>terraform init</pre>
+      <li>Validate Configuration</li>
+      <pre>terraform validate</pre>
+      <li>Plan Infrastructure</li>
+      <pre>terraform plan</pre>
+      <li>Apply Infrastructure</li>
+      <pre>terraform apply -auto-approve</pre>
+    </ol>
+
+    
+    <h3>Step 6: CI/CD Pipeline for Terraform Deployment</h3>
+    <p>Using GitHub Actions for automation.</p>
+    <pre>
+    name: Terraform Multi-Cloud Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+    </pre>
+
+    <h2>Monitoring Setup</h2>
+    <ul>
+      <li>AWS CloudWatch for EC2 monitoring</li>
+      <li>Azure Monitor for VM monitoring</li>
+      <li>GCP Stackdriver for Compute Engine monitoring</li>
+      <li>Prometheus & Grafana for centralized multi-cloud monitoring</li>
+    </ul>
+
+    <h2>Project Outcomes</h2>
+    <ul>
+      <li><strong>Fully automated multi-cloud infrastructure</strong> using Terraform</li>
+      <li><strong>Secure and scalable</strong> deployments across AWS, Azure, and GCP</li>
+      <li><strong>State management using remote backends</strong></li>
+      <li><strong>CI/CD pipeline for continuous Terraform deployment</strong></li>
+      <li><strong>Networking & Security policies implemented consistently across clouds</strong></li>
+    </ul>
+
+    <h2>Next Steps</h2>
+     <ul>
+       <li>Extend the project to include Kubernetes (EKS, AKS, GKE)</li>
+       <li>Add database services like RDS, Azure SQL, and Cloud SQL</li>
+       <li>Implement Service Mesh for multi-cloud communication (e.g., Istio)</li>
+     </ul>
+    <h2>Conclusion</h2>
+    <p>This project provides a <strong>production-ready Terraform setup</strong> for deploying and managing workloads across AWS, Azure, and GCP with a <strong>unified IaC approach</strong>. It ensures <strong>scalability, security, and automation</strong>, making multi-cloud management seamless. 🚀</p>
+</body>
+</html>
