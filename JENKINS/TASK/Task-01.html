@@ -1,1 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic CI Pipeline with Jenkins</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-left: 5px solid #ccc;
+            overflow-x: auto;
+        }
+        code {
+            font-family: "Courier New", monospace;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Project: Basic CI Pipeline with Jenkins</h1>
+    
+    <h2>Objective</h2>
+    <p>To set up a <strong>Continuous Integration (CI) pipeline</strong> using <strong>Jenkins</strong> that will:</p>
+    <ul>
+        <li>Clone a Git repository (Java/Python application).</li>
+        <li>Build the application (Maven for Java / pip for Python).</li>
+        <li>Run tests (JUnit for Java / pytest for Python).</li>
+        <li>Store build artifacts (if applicable).</li>
+        <li>Output logs for monitoring.</li>
+    </ul>
+    
+    <h2>1. Prerequisites</h2>
+    <ul>
+        <li><strong>Jenkins Installed</strong> (Can be on an EC2 instance, local machine, or a container).</li>
+        <li><strong>GitHub Repository</strong> containing a Java or Python project.</li>
+        <li><strong>Java & Maven</strong> (for Java builds) OR Python & pip (for Python builds).</li>
+        <li><strong>Jenkins Plugins:</strong>
+            <ul>
+                <li><strong>Git Plugin</strong></li>
+                <li><strong>Pipeline Plugin</strong></li>
+                <li><strong>AnsiColor Plugin</strong> (for color-coded logs)</li>
+            </ul>
+        </li>
+    </ul>
+    
+    <h2>2. Setting Up Jenkins</h2>
+    <h3>1.Install Jenkins (on AWS EC2 / local machine)</h3>
+    <p>On Ubuntu:</p>
+    <pre><code>sudo apt update
+sudo apt install openjdk-11-jdk -y
+wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt update
+sudo apt install jenkins -y
+sudo systemctl start jenkins</code></pre>
+    
+    <h3>2.Access Jenkins UI</h3>
+    <ul>
+        <li>Open <code>http://your-server-ip:8080</code></li>
+        <li>Unlock Jenkins with the admin password:</li>
+    </ul>
+    <pre><code>sudo cat /var/lib/jenkins/secrets/initialAdminPassword</code></pre>
+    <ul>
+        <li>Install suggested plugins.</li>
+    </ul>
+    
+    <h3>Create a New Pipeline Job</h3>
+    <ul>
+        <li>Navigate to <strong>Jenkins Dashboard → New Item</strong>.</li>
+        <li>Select <strong>Pipeline</strong> and name it <strong>Basic-CI-Pipeline</strong>.</li>
+    </ul>
+    
+    <h2>3. Jenkins Pipeline Script</h2>
+    <p><strong>Go to "Pipeline" section → Choose "Pipeline Script"</strong> and enter the following code:</p>
+    <h3>For a Java Application (Maven-based project)</h3>
+    <pre><code>pipeline {
+    agent any
 
+    environment {
+        JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-amd64"
+        PATH = "$JAVA_HOME/bin:$PATH"
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-username/your-java-repo.git'
+            }
+        }
+
+        stage('Build Application') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Build was successful!'
+        }
+        failure {
+            echo 'Build failed! Check the logs.'
+        }
+    }
+}</code></pre>
+    
+    <h3>For a Python Application</h3>
+    <pre><code>pipeline {
+    agent any
+
+    environment {
+        PYTHON = "/usr/bin/python3"
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-username/your-python-repo.git'
+            }
+        }
+
+        stage('Setup Environment') {
+            steps {
+                sh 'python3 -m venv venv'
+                sh 'source venv/bin/activate && pip install -r requirements.txt'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'source venv/bin/activate && pytest tests/'
+            }
+        }
+
+        stage('Linting') {
+            steps {
+                sh 'source venv/bin/activate && flake8 .'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Build was successful!'
+        }
+        failure {
+            echo 'Build failed! Check the logs.'
+        }
+    }
+}</code></pre>
+    
+    <h2>4. Run & Monitor Pipeline</h2>
+    <ol>
+        <li><strong>Save the pipeline and click "Build Now".</strong></li>
+        <li><strong>Check logs in "Console Output".</strong></li>
+        <li>If successful, you will see:
+            <ul>
+                <li>A <strong>successful build notification.</strong></li>
+                <li>A stored <strong>JAR file (for Java)</strong> or installed dependencies (for Python).</li>
+            </ul>
+        </li>
+    </ol>
+    
+    <h2>5. Enhancements (Optional)</h2>
+    <ul>
+        <li><strong>Dockerize the pipeline</strong> for better portability.</li>
+        <li><strong>Integrate Slack or Email notifications</strong> for build status updates.</li>
+        <li><strong>Add SonarQube for code quality analysis.</strong></li>
+        <li><strong>Extend pipeline to deploy artifacts</strong> to Nexus, Artifactory, or Docker Hub.</li>
+    </ul>
+    
+    <h2>Conclusion</h2>
+    <p>This basic CI pipeline <strong>automates the build process</strong> for a Java or Python application. It <strong>clones the repository, builds, tests, and archives artifacts</strong> while providing logs for debugging.</p>
+</body>
+</html>
