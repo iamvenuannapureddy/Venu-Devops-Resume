@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Task: Deploying a Sample Application Using Ansible</title>
+</head>
+<body>
+    <h1>End-to-End Task: Deploying a Sample Application Using Ansible</h1>
+    
+    <h2>Task Overview</h2>
+    <p>This Task focuses on deploying a sample web application (Flask or Node.js) using <strong>Ansible</strong> to automate the setup of dependencies, configure the server, and manage the application as a systemd service.</p>
+    
+    <h2>Technology Stack</h2>
+    <ul>
+        <li><strong>Application:</strong> Flask (Python) or Node.js</li>
+        <li><strong>Configuration Management:</strong> Ansible</li>
+        <li><strong>Infrastructure:</strong> AWS EC2 or Local VMs</li>
+        <li><strong>OS:</strong> Ubuntu 22.04 (or any Linux distribution)</li>
+        <li><strong>Package Manager:</strong> pip (for Flask) or npm (for Node.js)</li>
+        <li><strong>Web Server:</strong> Nginx (as a reverse proxy)</li>
+        <li><strong>Database:</strong> PostgreSQL or MySQL (optional)</li>
+        <li><strong>Process Management:</strong> systemd</li>
+    </ul>
+    
+    <h2>Task Workflow</h2>
+    <h3>1. Setup Infrastructure</h3>
+    <ul>
+        <li><strong>Provision an EC2 instance</strong> (or a VM) running Ubuntu.</li>
+        <li><strong>Enable SSH access</strong> for Ansible.</li>
+        <li><strong>Configure firewall rules</strong> (e.g., allow HTTP, HTTPS, SSH).</li>
+    </ul>
+    
+    <h3>2. Prepare Ansible Configuration</h3>
+    <ul>
+        <li><strong>Create an Ansible inventory file</strong> listing the target host.</li>
+        <li><strong>Write Ansible Playbooks to:</strong></li>
+        <ul>
+            <li>Install required dependencies (Python, Node.js, Nginx, etc.).</li>
+            <li>Clone the application repository.</li>
+            <li>Install application dependencies.</li>
+            <li>Configure the application service using systemd.</li>
+            <li>Configure Nginx as a reverse proxy.</li>
+            <li>Start and enable services.</li>
+        </ul>
+    </ul>
+    
+    <h3>3. Deploy the Application</h3>
+    <p>Run the Ansible playbook to execute all tasks in sequence.</p>
+    
+    <h3>4. Verify Deployment</h3>
+    <ul>
+        <li>Check if the application is running on the expected port.</li>
+        <li>Verify Nginx configuration.</li>
+        <li>Ensure the application restarts on reboot.</li>
+    </ul>
+    
+    <h2>Implementation Steps</h2>
+    <h3>Step 1: Install Ansible on the Control Node</h3>
+    <p>Run the following commands to install Ansible on your local machine or a dedicated Ansible control node:</p>
+    <pre><code>sudo apt update && sudo apt install -y ansible
+ansible --version</code></pre>
+    
+    <h3>Step 2: Create an Inventory File</h3>
+    <p>Create inventory.ini with the target server:</p>
+    <pre><code>[web]
+your-server-ip ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa</code></pre>
+    
+    <h3>Step 3: Write the Ansible Playbook (deploy_app.yml)</h3>
+    <pre><code>---
+- name: Deploy Sample Application
+  hosts: web
+  become: yes
+  tasks:
+
+    - name: Update and install required packages
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - git
+          - nginx
+        state: present
+        update_cache: yes
+
+    - name: Install Node.js (if deploying Node.js app)
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+        sudo apt install -y nodejs
+      when: "'node_app' in group_names"
+
+    - name: Clone the application repository
+      git:
+        repo: "https://github.com/example/flask-sample-app.git"
+        dest: "/opt/app"
+        version: main
+
+    - name: Install Python dependencies
+      pip:
+        requirements: "/opt/app/requirements.txt"
+        virtualenv: "/opt/app/venv"
+      when: "'flask_app' in group_names"
+
+    - name: Install Node.js dependencies
+      command: npm install
+      args:
+        chdir: "/opt/app"
+      when: "'node_app' in group_names"
+
+    - name: Create a systemd service for the application
+      template:
+        src: app.service.j2
+        dest: /etc/systemd/system/app.service
+      notify: Restart Application
+
+    - name: Reload systemd and enable the application
+      systemd:
+        daemon_reload: yes
+        name: app
+        state: started
+        enabled: yes
+
+    - name: Configure Nginx reverse proxy
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/sites-available/app
+      notify: Restart Nginx
+
+    - name: Enable Nginx site
+      file:
+        src: /etc/nginx/sites-available/app
+        dest: /etc/nginx/sites-enabled/app
+        state: link
+
+    - name: Restart Nginx
+      systemd:
+        name: nginx
+        state: restarted
+        enabled: yes
+
+  handlers:
+    - name: Restart Application
+      systemd:
+        name: app
+        state: restarted
+
+    - name: Restart Nginx
+      systemd:
+        name: nginx
+        state: restarted
+  </code></pre>
+    
+    <h3>Step 4: Create Templates for systemd and Nginx</h3>
+    <h4>1. Create systemd service file (templates/app.service.j2)</h4>
+    <pre><code>[Unit]
+Description=Sample Application
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/opt/app
+ExecStart=/opt/app/venv/bin/python /opt/app/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+    
+    <h4>2. Create Nginx configuration file (templates/nginx.conf.j2)</h4>
+    <pre><code>server {
+    listen 80;
+    server_name your-server-ip;
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}</code></pre>
+    
+    <h3>Step 5: Run the Ansible Playbook</h3>
+    <pre><code>ansible-playbook -i inventory.ini deploy_app.yml</code></pre>
+    
+    <h2>Verification</h2>
+    <ul>
+        <li>Check if the application is running: <pre><code>sudo systemctl status app</code></pre></li>
+        <li>Verify Nginx configuration: <pre><code>sudo nginx -t</code></pre></li>
+        <li>Visit the Application URL: Open <code>http://your-server-ip</code> in a browser.</li>
+    </ul>
+    
+    <h2>Project Enhancements</h2>
+    <ul>
+        <li>Use <strong>Ansible Vault</strong> to secure credentials.</li>
+        <li>Integrate with <strong>AWS RDS</strong> for database connectivity.</li>
+        <li>Add <strong>TLS/SSL</strong> for secure communication (Let's Encrypt).</li>
+        <li>Use <strong>Docker & Kubernetes</strong> for containerized deployments.</li>
+    </ul>
+    
+    <h2>Conclusion</h2>
+    <p>This project automates the deployment of a Flask or Node.js application using <strong>Ansible</strong>. It installs dependencies, sets up <code>systemd</code> for application management, and configures <strong>Nginx as a reverse proxy</strong>. This setup ensures <strong>scalability</strong>, <strong>high availability</strong>, and <strong>automation</strong> for application deployment.</p>
+</body>
+</html>
