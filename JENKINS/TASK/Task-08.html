@@ -1,1 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jenkins Integration with Slack & Email Notifications</title>
+</head>
+<body>
+    <h1> Jenkins Integration with Slack & Email Notifications for Build Status</h1>
+    
+    <h2>Objective</h2>
+    <p>Automate notifications in Jenkins for build status updates (Success, Failure, Unstable) by integrating it with <strong>Slack</strong> and <strong>Email</strong>.</p>
+    
+    <h2>Project Overview</h2>
+    <p>This project configures Jenkins to send <strong>Slack messages</strong> and <strong>email alerts</strong> when a build completes. 
+      It ensures developers are immediately notified about build failures or successes, enhancing CI/CD efficiency.</p>
+    
+    <h2>Technologies & Tools Used</h2>
+    <ul>
+        <li><strong>Jenkins</strong> (CI/CD automation tool)</li>
+        <li><strong>Slack</strong> (for team collaboration)</li>
+        <li><strong>Email Server (SMTP)</strong> (for email notifications)</li>
+        <li><strong>Jenkins Plugins:</strong>
+            <ul>
+                <li>Slack Notification Plugin</li>
+                <li>Email Extension Plugin</li>
+            </ul>
+        </li>
+        <li><strong>AWS SES (Optional)</strong> – If using AWS for SMTP emails.</li>
+        <li><strong>Groovy</strong> (for advanced notification scripts)</li>
+    </ul>
+    
+    <h2>Implementation Steps</h2>
+    
+    <h3>Step 1: Install Required Plugins</h3>
+    <ol>
+        <li>Open <strong>Jenkins Dashboard</strong> → Navigate to <strong>Manage Jenkins</strong> → <strong>Manage Plugins</strong>.</li>
+        <li>Under the <strong>Available</strong> tab, search and install:
+            <ul>
+                <li>Slack Notification Plugin</li>
+                <li>Email Extension Plugin</li>
+            </ul>
+        </li>
+        <li>Restart Jenkins after installation.</li>
+    </ol>
+    
+    <h3>Step 2: Configure Slack Integration</h3>
+    <ol>
+        <li><strong>Create a Slack App:</strong>
+            <ul>
+                <li>Go to <a href="https://api.slack.com/">Slack API</a></li>
+                <li>Click on <strong>"Create an App"</strong> → From Scratch.</li>
+                <li>Select your workspace and provide a name.</li>
+                <li>Navigate to <strong>OAuth & Permissions</strong> → Add the required scopes:
+                    <ul>
+                        <li>chat:write</li>
+                        <li>chat:write.customize</li>
+                        <li>chat:write.public</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li><strong>Generate and Copy Bot Token</strong>.</li>
+        <li><strong>Set Up a Slack Channel</strong>:
+            <ul>
+                <li>Create a <strong>new Slack channel</strong> (e.g., <code>#jenkins-notifications</code>).</li>
+                <li>Invite the bot to this channel.</li>
+            </ul>
+        </li>
+        <li>Configure Slack in Jenkins:
+          <ul>
+            <li>Open Jenkins Dashboard → Manage Jenkins → Configure System.</li>
+            <li>Scroll to Slack section.</li>
+            <li>Enter:
+              <ul>
+                <li>Workspace name.</li>
+                <li>Bot User OAuth Token.</li>
+                <li>Channel Name (e.g., #jenkins-notifications).</li>
+              </ul>
+            </li>
+            <li>Test the connection and save.</li>
+          </ul>
+        </li>
+    </ol>
+    
+    <h3>Step 3: Configure Email Notifications</h3>
+    <ol>
+        <li>Setup SMTP Server:
+          <ul>
+            <li>Open Jenkins Dashboard → Manage Jenkins → Configure System.</li>
+            <li>Scroll to E-mail Notification section.</li>
+            <li>Enter SMTP settings:
+              <ul>
+                <li>SMTP Server: e.g., smtp.gmail.com (for Gmail)</li>
+                <li>Username: Your email address.</li>
+                <li>Password: App password (not regular email password).</li>
+                <li>SMTP Port: 465 (for SSL) or 587 (for TLS).</li>
+                <li>Use SSL/TLS: Enable.</li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li>Test the Email Configuration.
+          <ul>
+            <li>Add Test email recipients and send a test mail.</li>
+          </ul>
+        </li>
+    </ol>
+    
+    <h3>Step 4: Add Notification to a Jenkins Job</h3>
+    <ol>
+      <li>Open an existing Jenkins Pipeline job or create a new one.</li>
+      <li>Edit the Jenkinsfile to include Slack and Email notifications.</li>
+    </ol>
+    
+    <h3>Step 5: Configure Jenkinsfile for Notifications</h3>
+    <p>Modify the Jenkinsfile to include Slack and Email notifications:</p>
+    <pre><code>
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                echo "Building application..."
+                sh 'exit 0'  // Simulating a successful build
+            }
+        }
+    }
+
+    post {
+        success {
+            slackSend channel: '#jenkins-notifications', color: 'good', message: "✅ SUCCESS: Job ${env.JOB_NAME} #${env.BUILD_NUMBER} completed successfully."
+            emailext subject: "Jenkins Build SUCCESS: ${env.JOB_NAME}",
+                     body: "SUCCESS: Build #${env.BUILD_NUMBER} completed successfully.",
+                     recipientProviders: [[$class: 'DevelopersRecipientProvider']]
+        }
+        failure {
+            slackSend channel: '#jenkins-notifications', color: 'danger', message: "❌ FAILURE: Job ${env.JOB_NAME} #${env.BUILD_NUMBER} failed."
+            emailext subject: "Jenkins Build FAILURE: ${env.JOB_NAME}",
+                     body: "FAILURE: Build #${env.BUILD_NUMBER} failed. Check logs.",
+                     recipientProviders: [[$class: 'DevelopersRecipientProvider']]
+        }
+    }
+}
+
+    </code></pre>
+    
+    <h2>Testing the Integration</h2>
+    <ol>
+        <li>Run the pipeline job in Jenkins.</li>
+        <li>Check Slack for a message in <code>#jenkins-notifications</code>.</li>
+        <li>Verify email notifications in the recipient’s inbox.</li>
+        <li>Induce a failure (e.g., <code>sh 'exit 1'</code>) and test failure notifications.</li>
+    </ol>
+    
+    <h2>Conclusion</h2>
+    <p>This project successfully integrates <strong>Slack</strong> and <strong>Email notifications</strong> into Jenkins for build status updates.
+      It ensures teams receive immediate feedback on builds, improving DevOps collaboration and efficiency.</p>    
+</body>
+</html>
 
